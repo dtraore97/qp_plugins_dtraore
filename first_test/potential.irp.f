@@ -8,7 +8,7 @@ program potential
  END_DOC
 
  double precision, allocatable :: w_B(:), beta(:), mo_r1(:), mo_r2(:), r1(:), e_pbe(:) ! w_B: distribution - Signification à revoir (eq. A8 - article 149 2018), beta: eq. 14b - article J. Phys. Chem. 2019, mo_ri: orbitales en ri // eq. A6 opérateur creations et annihilations?? 
- double precision :: c_1, Sum_w, pi, mu, theta, dtheta, thetamax, r_initial, mu_max, two_dm, two_dm_in_r_diata ! Sum_w: somme 
+ double precision :: c_1, Sum_w, Sum_w_lim, pi, mu, theta, dtheta, thetamax, r_initial, mu_max, two_dm, two_dm_in_r_diata, get_two_e_integral, bielec_integral ! Sum_w: somme 
  integer :: mo_num_i, mo_num_j, mo_num_k, mo_num_l, i, m, istate, j ! Numéro des orbitales
  
  allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
@@ -26,8 +26,9 @@ program potential
  j = 37
  print*, 'N_states= ', N_states, 'n_points_final_grid= ', n_points_final_grid
 
-do while (mu < 10.d0)
+!do while (mu < 10.d0)
  Sum_w = 0.d0
+ Sum_w_lim = 0.d0
  do i = 1, n_points_final_grid
   do m = 1, 3
    r1(m) = final_grid_points(m,i) ! ------ ????? ------
@@ -40,17 +41,24 @@ do while (mu < 10.d0)
   write(37,*)mu, i, Beta(istate)
  
   !w_B(i) = e_pbe(istate)**(2) * mu**(3) * c_1 / (two_dm**(2) *(1.d0 + beta(istate)*mu**(3))**(2)) ! ATTENTION e_pbe : tableau sur le nombre d'états
+  mu = mu_of_r_vector(i)
   w_B(i) = e_pbe(istate)**(2) * mu**(3) * c_1 / (two_dm**(2) *(1.d0 + beta(istate)*mu**(3))**(2))
   Sum_w += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*w_B(i) ! Final_weight_at_r_vector
   !print*,'final_weight_at_r_vector(',i,')= ', final_weight_at_r_vector(i)
+  Sum_w_lim += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)/(c_1*mu**3)
    if (mu < 1.5d0 .AND. mu > 0.7d0) then
-    write(j,*)mu, r1(1), r1(2), r1(3), Sum_w
+  !  write(j,*)mu, r1(1), r1(2), r1(3), Sum_w, Sum_w_lim
    end if
  enddo
  j+=1
  !print *,'sum = ', Sum_w
- write(36,*)mu, Beta(1), Sum_w
+  bielec_integral = get_two_e_integral(1,1,1,1,mo_integrals_map)
+! write(36,*)mu, Beta(1), Sum_w, Sum_w_lim, bielec_integral
+ write(36,*) Sum_w, Sum_w_lim, bielec_integral
  mu += 0.1d0
-enddo
+
+ ! hmono = 2.d0 * mo_one_e_integrals(2,2)
+  !print*,'e = ', hmono + bielec_integral
+!enddo
 
 end
