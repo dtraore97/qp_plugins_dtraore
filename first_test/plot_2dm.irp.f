@@ -103,4 +103,5 @@ program plot_2_dm
   
  enddo
  print *,'sum = ', Sum_w
+ print*,'youpi'
 end
