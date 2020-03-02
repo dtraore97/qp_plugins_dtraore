@@ -5,19 +5,23 @@ program New_Schro
  
  BEGIN_DOC
  ! All integrals for sr_dft E0 calculations without lda_UEG approximation
+ ! ---------- EHxc ---------
  ! 1) WB_sr:
  !    ok, tested
  !
  ! 2) VB_sr:
  !    I'm looking for this integral in the plugins
  !
+ ! ---------- Elr -----------
  ! 3) T_mu:
- !    I'm looking for this integral in the plugins
- !    See : mo_one_e_ints/mo_one_e_ints.irp.f mo_one_e_integrals
+ !    See : mo_one_e_ints/mo_one_e_ints.irp.f ---->  mo_one_e_integrals
  !
  ! 4) Wee_lr:
  !    I'm looking for this integral in the plugins
  !
+ ! 6) ------- To add ! Vne -----------
+ !    Check if One_e_integrals contains Vne AND T  
+ ! 
  ! 5) File with integrals
  END_DOC
 
@@ -89,7 +93,7 @@ do i = 1, n_points_final_grid
 
   call give_all_mos_at_r(r1,mo_r2)
 
-VB_n(i) =
+VB_n(i) = get_two_e_integral(i,j,k,l,mo_integrals_map)
 Sum_v += finale_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_l)
 enddo
 
@@ -105,8 +109,8 @@ do i = 1, n_points_final_grid
   r1(m) = final_grid_points(m,i)
  enddo
 
- Ek_i(i) = 
- Sum_Ek += Ek_i(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l) 
+ Ek_i(i) = mo_one_e_integrals(i,j) 
+ Sum_Ek += Ek_i(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)
 
 enddo
 
