@@ -26,7 +26,7 @@ program potential
  j = 37
  print*, 'N_states= ', N_states, 'n_points_final_grid= ', n_points_final_grid
 
-! -------------- WB -----------------
+! -------------- WB = Sum(space) Psi_r(i)Psi_r(j) wB Psi_r(k)Psi_r(l)----------------
 !do while (mu < 10.d0)
  Sum_w = 0.d0
  Sum_w_lim = 0.d0
@@ -96,7 +96,7 @@ do i = 1, n_points_final_grid
 
 enddo
 
-!----------- Long-range Coulomb Energy --------------
+!------------  Long-range Coulomb Energy --------------
 double precision, allocatable :: Wee_lr(i)
 double precision :: Sum_We_lr
 allocate(Wee_lr(n_points_final_grid))
@@ -113,4 +113,5 @@ enddo
 
 !----------- File with integrals ----------------
  write(36,*) Sum_w, Sum_Ek, Sum_Weelr, Sum_v !Sum_w = Wee_sr
+
 end
