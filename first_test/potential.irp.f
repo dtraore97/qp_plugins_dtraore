@@ -11,7 +11,7 @@ program potential
  double precision :: c_1, Sum_w, Sum_w_lim, pi, mu, theta, dtheta, thetamax, r_initial, mu_max, two_dm, two_dm_in_r_diata, get_two_e_integral, bielec_integral ! Sum_w: somme 
  integer :: mo_num_i, mo_num_j, mo_num_k, mo_num_l, i, m, istate, j ! Numéro des orbitales
  
- allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
+ allocate(w_B(n_points_final_grid), v_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
 
  
  pi = dacos(-1.d0)
@@ -26,6 +26,7 @@ program potential
  j = 37
  print*, 'N_states= ', N_states, 'n_points_final_grid= ', n_points_final_grid
 
+! -------------- WB -----------------
 !do while (mu < 10.d0)
  Sum_w = 0.d0
  Sum_w_lim = 0.d0
@@ -43,7 +44,7 @@ program potential
   !w_B(i) = e_pbe(istate)**(2) * mu**(3) * c_1 / (two_dm**(2) *(1.d0 + beta(istate)*mu**(3))**(2)) ! ATTENTION e_pbe : tableau sur le nombre d'états
   mu = mu_of_r_vector(i)
   w_B(i) = e_pbe(istate)**(2) * mu**(3) * c_1 / (two_dm**(2) *(1.d0 + beta(istate)*mu**(3))**(2))
-  Sum_w += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*w_B(i) ! Final_weight_at_r_vector
+  Sum_w += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l)*w_B(i) ! Final_weight_at_r_vector
   !print*,'final_weight_at_r_vector(',i,')= ', final_weight_at_r_vector(i)
   Sum_w_lim += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)/(c_1*mu**3)
    if (mu < 1.5d0 .AND. mu > 0.7d0) then
@@ -55,10 +56,61 @@ program potential
   bielec_integral = get_two_e_integral(1,1,1,1,mo_integrals_map)
 ! write(36,*)mu, Beta(1), Sum_w, Sum_w_lim, bielec_integral
  write(36,*) Sum_w, Sum_w_lim, bielec_integral
- mu += 0.1d0
+!  mu += 0.1d0
 
  ! hmono = 2.d0 * mo_one_e_integrals(2,2)
   !print*,'e = ', hmono + bielec_integral
 !enddo
 
+! ---------------- VB ----------------
+double precision, allocatable :: VB_n(:)
+double precision :: Sum_v
+Sum_v = 0.d0
+allocate(VB_n(n_points_final_grid))
+
+do i = 1, n_points_final_grid
+ do m = 1, 3
+  r1(m) = final_grid_points(m,i)
+ enddo
+
+  call give_all_mos_at_r(r1,mo_r2)
+
+VB_n(i) =
+Sum_v += finale_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_l)
+enddo
+
+!--------------- 1 electron sum (kinetic energy) ---------
+double precision :: Sum_Ek
+double precision, allocatable :: Ek_i(:)
+allocate(Ek_i(n_points_final_grid))
+
+Sum_Ek = 0.d0
+
+do i = 1, n_points_final_grid
+ do m = 1, 3
+  r1(m) = final_grid_points(m,i)
+ enddo
+
+ Ek_i(i) = 
+ Sum_Ek += Ek_i(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l) 
+
+enddo
+
+!----------- Long-range Coulomb Energy --------------
+double precision, allocatable :: Wee_lr(i)
+double precision :: Sum_We_lr
+allocate(Wee_lr(n_points_final_grid))
+
+do i = 1, n_points_final_grid
+ do m = 1, 3
+  r1(m) = final_grid_points(m,i)
+ enddo
+
+Wee_lr = 
+Sum_We_lr += final_weight_at_r_vector(i)*Wee_lr(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l)
+
+enddo
+
+!----------- File with integrals ----------------
+ write(36,*) Sum_w, Sum_Ek, Sum_Weelr, Sum_v !Sum_w = Wee_sr
 end
