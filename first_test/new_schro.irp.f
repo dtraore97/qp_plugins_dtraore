@@ -10,14 +10,15 @@ program New_Schro
  !    ok, tested
  !
  ! 2) VB_sr:
- !    I'm looking for this integral in the plugins
+ !    ok, to test
  !
- ! ---------- Elr -----------
+ ! ---------- Elr ----------- (looking for PsiMu)
  ! 3) T_mu:
  !    See : mo_one_e_ints/mo_one_e_ints.irp.f ---->  mo_one_e_integrals
  !
  ! 4) Wee_lr:
  !    I'm looking for this integral in the plugins
+ !    Need to find erf.
  !
  ! 6) ------- To add ! Vne -----------
  !    Check if One_e_integrals contains Vne AND T  
@@ -80,21 +81,21 @@ program New_Schro
   !print*,'e = ', hmono + bielec_integral
 !enddo
 
-! ---------------- VB ----------------
-double precision, allocatable :: VB_n(:)
-double precision :: Sum_v
+! ---------------- VB _ short range ----------------
+double precision, allocatable :: VB_n(:),dm_a(:),dm_b(:)
+double precision :: Sum_v, cx
 Sum_v = 0.d0
-allocate(VB_n(n_points_final_grid))
-
+cx = 
+allocate(VB_n(n_points_final_grid), dm_a(N_states), dm_b(N_states))
 do i = 1, n_points_final_grid
  do m = 1, 3
   r1(m) = final_grid_points(m,i)
  enddo
-
+  call dm_dft_alpha_beta_at_r(r1,dm_a,dm_b)
   call give_all_mos_at_r(r1,mo_r2)
 
-VB_n(i) = get_two_e_integral(i,j,k,l,mo_integrals_map)
-Sum_v += finale_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_l)
+VB_n(i) = 4.d0/3.d0 * cx * (dm_a(mo_num_j) + dm_a(mo_num_j))**(1.d0/3.d0)
+Sum_v += finale_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_j)
 enddo
 
 !--------------- 1 electron sum (kinetic energy) ---------
