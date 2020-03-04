@@ -11,7 +11,7 @@ program potential
  double precision :: c_1, Sum_w, Sum_w_lim, pi, mu, theta, dtheta, thetamax, r_initial, mu_max, two_dm, two_dm_in_r_diata, get_two_e_integral, bielec_integral ! Sum_w: somme 
  integer :: mo_num_i, mo_num_j, mo_num_k, mo_num_l, i, m, istate, j ! Numéro des orbitales
  
- allocate(w_B(n_points_final_grid), v_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
+ allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
 
  
  pi = dacos(-1.d0)
@@ -75,8 +75,8 @@ do i = 1, n_points_final_grid
 
   call give_all_mos_at_r(r1,mo_r2)
 
-VB_n(i) =
-Sum_v += finale_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_l)
+VB_n(i) = 0.d0
+Sum_v += final_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_l)
 enddo
 
 !--------------- 1 electron sum (kinetic energy) ---------
@@ -91,13 +91,13 @@ do i = 1, n_points_final_grid
   r1(m) = final_grid_points(m,i)
  enddo
 
- Ek_i(i) = 
+ Ek_i(i) = 0.d0
  Sum_Ek += Ek_i(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l) 
 
 enddo
 
 !------------  Long-range Coulomb Energy --------------
-double precision, allocatable :: Wee_lr(i)
+double precision, allocatable :: Wee_lr(:)
 double precision :: Sum_We_lr
 allocate(Wee_lr(n_points_final_grid))
 
@@ -106,12 +106,12 @@ do i = 1, n_points_final_grid
   r1(m) = final_grid_points(m,i)
  enddo
 
-Wee_lr = 
+Wee_lr = 0.d0
 Sum_We_lr += final_weight_at_r_vector(i)*Wee_lr(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l)
 
 enddo
 
 !----------- File with integrals ----------------
- write(36,*) Sum_w, Sum_Ek, Sum_Weelr, Sum_v !Sum_w = Wee_sr
+ write(36,*) Sum_w, Sum_Ek, Sum_We_lr, Sum_v !Sum_w = Wee_sr
 
 end

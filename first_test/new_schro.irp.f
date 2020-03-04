@@ -19,6 +19,7 @@ program New_Schro
  ! 4) Wee_lr:
  !    I'm looking for this integral in the plugins
  !    Need to find erf.
+ !    Just found u0_H_u0_erf : look like <psi µ| H |psi µ> with the long range part of the Hamiltonian.
  !
  ! 6) ------- To add ! Vne -----------
  !    Check if One_e_integrals contains Vne AND T  
@@ -30,7 +31,7 @@ program New_Schro
  double precision :: c_1, Sum_w, Sum_w_lim, pi, mu, theta, dtheta, thetamax, r_initial, mu_max, two_dm, two_dm_in_r_diata, get_two_e_integral, bielec_integral ! Sum_w: somme 
  integer :: mo_num_i, mo_num_j, mo_num_k, mo_num_l, i, m, istate, j ! Numéro des orbitales
  
- allocate(w_B(n_points_final_grid), v_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
+ allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states))
 
  
  pi = dacos(-1.d0)
@@ -53,6 +54,7 @@ program New_Schro
   do m = 1, 3
    r1(m) = final_grid_points(m,i) ! ------ ????? ------
   enddo
+  mu = mu_of_r_vector(i)
 
   call ec_pbe_compact(r1,mu,e_pbe)
   call beta_from_on_top_grad_on_top_e_pbe(r1, mu, beta)
@@ -61,20 +63,16 @@ program New_Schro
   write(37,*)mu, i, Beta(istate)
  
   !w_B(i) = e_pbe(istate)**(2) * mu**(3) * c_1 / (two_dm**(2) *(1.d0 + beta(istate)*mu**(3))**(2)) ! ATTENTION e_pbe : tableau sur le nombre d'états
-  mu = mu_of_r_vector(i)
   w_B(i) = e_pbe(istate)**(2) * mu**(3) * c_1 / (two_dm**(2) *(1.d0 + beta(istate)*mu**(3))**(2))
-  Sum_w += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l)*w_B(i) ! Final_weight_at_r_vector
+  Sum_w += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*w_B(i) ! Final_weight_at_r_vector
   !print*,'final_weight_at_r_vector(',i,')= ', final_weight_at_r_vector(i)
-  Sum_w_lim += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)/(c_1*mu**3)
-   if (mu < 1.5d0 .AND. mu > 0.7d0) then
-  !  write(j,*)mu, r1(1), r1(2), r1(3), Sum_w, Sum_w_lim
-   end if
+ ! Sum_w_lim += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)/(c_1*mu**3)
  enddo
- j+=1
+ !j+=1
  !print *,'sum = ', Sum_w
-  bielec_integral = get_two_e_integral(1,1,1,1,mo_integrals_map)
+ ! bielec_integral = get_two_e_integral(1,1,1,1,mo_integrals_map)
 ! write(36,*)mu, Beta(1), Sum_w, Sum_w_lim, bielec_integral
- write(36,*) Sum_w, Sum_w_lim, bielec_integral
+! write(36,*) Sum_w, Sum_w_lim, bielec_integral
 !  mu += 0.1d0
 
  ! hmono = 2.d0 * mo_one_e_integrals(2,2)
@@ -85,38 +83,38 @@ program New_Schro
 double precision, allocatable :: VB_n(:),dm_a(:),dm_b(:)
 double precision :: Sum_v, cx
 Sum_v = 0.d0
-cx = 
+cx = -(3.d0/4.d0)*(3.d0/pi)**(1.d0/3.d0) 
 allocate(VB_n(n_points_final_grid), dm_a(N_states), dm_b(N_states))
 do i = 1, n_points_final_grid
  do m = 1, 3
   r1(m) = final_grid_points(m,i)
  enddo
   call dm_dft_alpha_beta_at_r(r1,dm_a,dm_b)
-  call give_all_mos_at_r(r1,mo_r2)
+  call give_all_mos_at_r(r1,mo_r1)
 
-VB_n(i) = 4.d0/3.d0 * cx * (dm_a(mo_num_j) + dm_a(mo_num_j))**(1.d0/3.d0)
-Sum_v += finale_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_j)
+VB_n(i) = (4.d0/3.d0) * cx * (dm_a(mo_num_j) + dm_a(mo_num_j))**(1.d0/3.d0)
+Sum_v += final_weight_at_r_vector(i)*VB_n(i)*mo_r1(mo_num_j)*mo_r1(mo_num_j)
 enddo
 
 !--------------- 1 electron sum (kinetic energy) ---------
-double precision :: Sum_Ek
+double precision :: Sum_Ek, Eknetic_i
 double precision, allocatable :: Ek_i(:)
 allocate(Ek_i(n_points_final_grid))
 
 Sum_Ek = 0.d0
+Eknetic_i = mo_one_e_integrals(mo_num_i, mo_num_j)
 
 do i = 1, n_points_final_grid
  do m = 1, 3
   r1(m) = final_grid_points(m,i)
  enddo
-
- Ek_i(i) = mo_one_e_integrals(i,j) 
+ call give_all_mos_at_r(r1,mo_r1)
+ Ek_i(i) = 0.d0 
  Sum_Ek += Ek_i(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)
-
 enddo
 
 !------------  Long-range Coulomb Energy --------------
-double precision, allocatable :: Wee_lr(i)
+double precision, allocatable :: Wee_lr(:)
 double precision :: Sum_We_lr
 allocate(Wee_lr(n_points_final_grid))
 
@@ -125,12 +123,18 @@ do i = 1, n_points_final_grid
   r1(m) = final_grid_points(m,i)
  enddo
 
-Wee_lr = 
+Wee_lr = 0.d0!u0_H_u0_erf
 Sum_We_lr += final_weight_at_r_vector(i)*Wee_lr(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r2(mo_num_k)*mo_r2(mo_num_l)
 
 enddo
 
 !----------- File with integrals ----------------
- write(36,*) Sum_w, Sum_Ek, Sum_Weelr, Sum_v !Sum_w = Wee_sr
-
+double precision :: Total
+Total = Sum_w + Sum_v + Eknetic_i + Sum_We_lr
+ write(40,*)'Wee_sr=', Sum_w
+ write(40,*)'Vne_sr=', Sum_v
+ write(40,*)'T_mu_lr=', Eknetic_i
+ write(40,*)'Wee_lr=', Sum_We_lr
+ write(40,*)'Total=', Total
+ write(40,*)'SCF_calculation = -2.855160477244202 (copy/paste from qp run scf)'
 end
