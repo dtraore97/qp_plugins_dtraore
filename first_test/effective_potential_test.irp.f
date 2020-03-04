@@ -38,23 +38,25 @@ program effectiv_potential
  r1(2) = 0.d0
  r1(3) = 0.d0
  pas = 0.5
- !do i = 1, n_points_final_grid
+ do i = 1, n_points_final_grid
 
- j_dp = 0.d0
- do i = 1, 10
-   mu_table(i) = j_dp
-   j_dp += 1.d0
- enddo
+ !j_dp = 0.d0
+ !do i = 1, 10
+ !  mu_table(i) = j_dp
+ !  j_dp += 1.d0
+ !enddo
 
- do j = 40, 50
- mu = mu_table(j)
- r1(1) = 0.d0
-  do i = 1, 500 
-   !do m = 1, 3
-   !  r1(m) = final_grid_points(m,i)
-   ! enddo 
+ !do j = 40, 50
+ !mu = mu_table(j)
+ !r1(1) = 0.d0
+ !Sum_w = 0.d0
+ !Sum_w_lim = 0.d0
+ !do i = 1, 500 
+   do m = 1, 3
+     r1(m) = final_grid_points(m,i)
+   enddo 
    ! ---- mu = constante then -------
-   ! mu = 0.d0
+   mu = 0.5
    ! ---- mu = funtion of r then ----
    ! mu = mu_of_r_vector(i)
  
@@ -70,10 +72,10 @@ program effectiv_potential
    Sum_w += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*w_B(i)
    Sum_w_lim += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*c/(mu**3) 
 
-   r1(1) += pas
-   write(j,*) r1(1), w_B(i), Sum_w, Sum_w_lim
-  enddo
+  ! r1(1) += pas
+   write(04032,*) r1(1), w_B(i)
+  !enddo
  enddo
- ! write(0403,*) Sum_w, Sum_w_lim
+ write(0403,*) Sum_w, Sum_w_lim
 
 end
