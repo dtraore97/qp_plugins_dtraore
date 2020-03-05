@@ -20,7 +20,7 @@ program effectiv_potential
  END_DOC
 
  double precision, allocatable :: w_B(:), beta(:), mo_r1(:), mo_r2(:), r1(:), e_pbe(:), mu_table(:)
- double precision :: c, Sum_w, Sum_w_lim, pi, mu, two_dm, two_dm_in_r_diata, pas, j_dp
+ double precision :: c, Sum_w, Sum_w_lim, pi, mu, two_dm, two_dm_in_r_diata, pas, j_dp, module_r1
  integer :: i, j, istate, m, mo_num_i, mo_num_j, mo_num_k, mo_num_l
  allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states), mu_table(10))
 
@@ -56,9 +56,9 @@ program effectiv_potential
      r1(m) = final_grid_points(m,i)
    enddo 
    ! ---- mu = constante then -------
-   mu = 0.5
+   ! mu = 0.5
    ! ---- mu = funtion of r then ----
-   ! mu = mu_of_r_vector(i)
+   mu = mu_of_r_vector(i)
  
    two_dm = two_dm_in_r_diata(r1,r1, istate) ! on_top pair density
    call beta_from_on_top_grad_on_top_e_pbe(r1, mu, beta)
@@ -73,7 +73,8 @@ program effectiv_potential
    Sum_w_lim += final_weight_at_r_vector(i)*mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*c/(mu**3) 
 
   ! r1(1) += pas
-   write(04032,*) r1(1), w_B(i)
+   module_r1 = dsqrt(r1(1)**2 + r1(2)**2 + r1(3)**2)
+   write(04032,*) module_r1, mu, w_B(i)
   !enddo
  enddo
  write(0403,*) Sum_w, Sum_w_lim
