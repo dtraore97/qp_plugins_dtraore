@@ -19,10 +19,10 @@ program effectiv_potential
  ! ------------------- 
  END_DOC
 
- double precision, allocatable :: w_B(:), beta(:), mo_r1(:), mo_r2(:), r1(:), e_pbe(:), mu_table(:)
+ double precision, allocatable :: w_B(:), w_B_UEG(:), beta(:), mo_r1(:), mo_r2(:), r1(:), e_pbe(:), mu_table(:)
  double precision :: c, Sum_w, Sum_w_lim, pi, mu, two_dm, two_dm_in_r_diata, pas, j_dp, module_r1
  integer :: i, j, istate, m, mo_num_i, mo_num_j, mo_num_k, mo_num_l
- allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states), mu_table(10))
+ allocate(w_B(n_points_final_grid), w_B_UEG(n_points_final_grid), beta(n_points_final_grid), mo_r1(mo_num), mo_r2(mo_num), r1(3), e_pbe(N_states), mu_table(10))
 
  
  pi = dacos(-1.d0)
@@ -74,7 +74,7 @@ program effectiv_potential
 
   ! r1(1) += pas
    module_r1 = dsqrt(r1(1)**2 + r1(2)**2 + r1(3)**2)
-   write(04032,*) module_r1, mu, w_B(i)
+   write(04032,*)i, module_r1, mu, w_B(i)
   !enddo
  enddo
  write(0403,*) Sum_w, Sum_w_lim

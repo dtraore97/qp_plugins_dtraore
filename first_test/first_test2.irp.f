@@ -34,6 +34,16 @@ program first_test
    print*,''
   enddo
 
+  
+  double precision :: accu
+  accu = 0.d0
+  do i = 1, N_det
+   do j = 1, N_det
+    accu += psi_coef(i,1) * psi_coef(j,1) * hmat(i,j)
+   enddo
+  enddo
+  print*,'accu = ',accu + nuclear_repulsion
+
   do i = 1, N_det
    hmat_diag(i,i) = hmat(i,i)
    ! hmat_diag(i,i) = 0. 

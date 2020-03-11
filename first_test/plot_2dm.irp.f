@@ -47,6 +47,7 @@ program plot_2_dm
 
  double precision :: mu
  mu = 0.d0
+ write(34, *) 'theta   ', 'r1(1)   ', 'r1(2)   ', 'dsqrt(r1(1)**2 + r1(2)**2)    ', 'dma*dmb    ', 'n2     ', 'mos(1)**4    ', 'e_pbe'
  do i = 1, ntheta
   call give_all_mos_at_r(r1,mos_array)
   call dm_dft_alpha_beta_at_r(r1,dm_a,dm_b)
@@ -78,30 +79,30 @@ program plot_2_dm
  print*,'accu = ',accu
 
 ! ------- Correction calculation ----------
- double precision, allocatable :: w_B(:), beta(:), mo_r1(:), mo_r2(:) ! w_B: distribution - Signification à revoir (eq. A8 - article 149 2018), beta: eq. 14b - article J. Phys. Chem. 2019, mo_ri: orbitales en ri // eq. A6 opérateur creations et annihilations?? 
- double precision :: c, Sum_w ! Sum_: somme 
- integer :: mo_num_i, mo_num_j, mo_num_k, mo_num_l ! Numéro des orbitales
- allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(n_points_final_grid), mo_r2(n_points_final_grid))
+! double precision, allocatable :: w_B(:), beta(:), mo_r1(:), mo_r2(:) ! w_B: distribution - Signification à revoir (eq. A8 - article 149 2018), beta: eq. 14b - article J. Phys. Chem. 2019, mo_ri: orbitales en ri // eq. A6 opérateur creations et annihilations?? 
+! double precision :: c, Sum_w ! Sum_: somme 
+! integer :: mo_num_i, mo_num_j, mo_num_k, mo_num_l ! Numéro des orbitales
+! allocate(w_B(n_points_final_grid), beta(n_points_final_grid), mo_r1(n_points_final_grid), mo_r2(n_points_final_grid))
  
- c = 3.d0 / (2.d0 * dsqrt(pi)*(1.d0 - dsqrt(2.d0)))
- Sum_w = 0
- mo_num_i = 1
- mo_num_j = 1 
- mo_num_k = 1 
- mo_num_l = 1 
+! c = 3.d0 / (2.d0 * dsqrt(pi)*(1.d0 - dsqrt(2.d0)))
+! Sum_w = 0
+! mo_num_i = 1
+! mo_num_j = 1 
+! mo_num_k = 1 
+! mo_num_l = 1 
 
- do i = 1, n_points_final_grid
-  call ec_pbe_compact(r1,mu,e_pbe)
-  call beta_from_on_top_grad_on_top_e_pbe(r1, mu, Beta)
-  call give_all_mos_at_r(r1,mo_num_i)
-  call give_all_mos_at_r(r1,mo_num_j)  
-  call give_all_mos_at_r(r1,mo_num_k)  
-  call give_all_mos_at_r(r1,mo_num_l)   
+! do i = 1, n_points_final_grid
+!  call ec_pbe_compact(r1,mu,e_pbe)
+!  call beta_from_on_top_grad_on_top_e_pbe(r1, mu, Beta)
+!  call give_all_mos_at_r(r1,mo_num_i)
+!  call give_all_mos_at_r(r1,mo_num_j)  
+!  call give_all_mos_at_r(r1,mo_num_k)  
+!  call give_all_mos_at_r(r1,mo_num_l)   
   
-  w_B(i) = e_pbe(i)**(2) * mu**(3) / (1.d0 + Beta(i)*mu**(3))**(2) 
-  Sum_w += final_weight_at_r_vector(i) * mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*w_B(i) 
+!  w_B(i) = e_pbe(i)**(2) * mu**(3) / (1.d0 + Beta(i)*mu**(3))**(2) 
+!  Sum_w += final_weight_at_r_vector(i) * mo_r1(mo_num_i)*mo_r1(mo_num_j)*mo_r1(mo_num_k)*mo_r1(mo_num_l)*w_B(i) 
   
- enddo
- print *,'sum = ', Sum_w
- print*,'youpi'
+! enddo
+! print *,'sum = ', Sum_w
+! print*,'youpi'
 end
