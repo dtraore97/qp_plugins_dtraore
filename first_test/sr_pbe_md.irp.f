@@ -12,9 +12,9 @@
 ! grad_rho_a(b)_2      : square of the gradient of alpha(beta) spin density per state
 ! grad_rho_a_b         : grad_rho_a*grad_rho_b
 ! rho_a(b)             : density of alpha(beta) spin per state
-
 !------------------------
-
+! Result for H2O : NaN -> parameters to check
+! in sr_pbe.irp.f (Emmanuel's version) ex is used as 'ex' but it doesn't work in my code: I have to use 'ex(istate)' -> i should define delta, gamma and beta as arrows...
  END_DOC
  integer :: istate,i,j,m
  double precision :: r(3)
