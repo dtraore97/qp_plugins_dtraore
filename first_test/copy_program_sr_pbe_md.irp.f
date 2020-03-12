@@ -1,5 +1,6 @@
- BEGIN_PROVIDER[double precision, energy_x_sr_pbe_md, (N_states) ]
-&BEGIN_PROVIDER[double precision, energy_c_sr_pbe_md, (N_states) ]
+program energy_x_c_md_test
+! BEGIN_PROVIDER[double precision, energy_x_sr_pbe_md, (N_states) ]
+!&BEGIN_PROVIDER[double precision, energy_c_sr_pbe_md, (N_states) ]
  implicit none
  BEGIN_DOC
 ! exchange/correlation energy with the short range pbe functional, multideterminantal form
@@ -7,7 +8,7 @@
 ! 11/03/20 Modified version of qp_plugins_eginer/stable/rsdft_cipsi/functionals/sr_pbe.irp.f
 !-------- Parameters (alphabetical order)--------
 ! contrib_grad_xa(xb, ca,cb)
-! energy_x/c_sr_pbe_md : "Short-range exchange correlation density functionals" - Odense-Paris collaboration (11/03/20 version)
+! energy_x/c_sr_pbe_md_copy : "Short-range exchange correlation density functionals" - Odense-Paris collaboration (11/03/20 version)
 ! g0                   : "Short-range exchange correlation density functionals" - Odense-Paris collaboration (11/03/20 version) -> from rsdft_ecmd/ueg_on_top.irp.f
 ! grad_rho_a(b)        : gradient of alpha(beta) spin density per state
 ! grad_rho_a(b)_2      : square of the gradient of alpha(beta) spin density per state
@@ -20,21 +21,21 @@
  integer :: istate,i,j,m
  double precision :: r(3)
  !double precision :: mu,weight, delta_n_m_grad_n, gamma_n_m_grad_n, beta_n_m_grad_n, n2_xc_ueg, n2_ueg, a, b, c, g0, zeta_var, pi, g0_UEG_mu, g0_UEG_mu_inf
- double precision :: mu,weight, n2_xc_ueg, n2_ueg, a, b, c, g0, zeta_var, pi, g0_UEG_mu, g0_UEG_mu_inf
- double precision, allocatable :: ex(:), ec(:), delta_n_m_grad_n(:), gamma_n_m_grad_n(:), beta_n_m_grad_n(:)
+ double precision :: mu,weight, n2_xc_ueg, n2_ueg, a, b, c, g0, zeta_var, pi, g0_UEG_mu, g0_UEG_mu_inf 
+ double precision, allocatable :: ex(:), ec(:), delta_n_m_grad_n(:), gamma_n_m_grad_n(:), beta_n_m_grad_n(:), energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
  double precision, allocatable :: rho_a(:),rho_b(:),grad_rho_a(:,:),grad_rho_b(:,:),grad_rho_a_2(:),grad_rho_b_2(:),grad_rho_a_b(:)
  double precision, allocatable :: contrib_grad_xa(:,:),contrib_grad_xb(:,:),contrib_grad_ca(:,:),contrib_grad_cb(:,:)
  double precision, allocatable :: vc_rho_a(:), vc_rho_b(:), vx_rho_a(:), vx_rho_b(:)
  double precision, allocatable :: vx_grad_rho_a_2(:), vx_grad_rho_b_2(:), vx_grad_rho_a_b(:), vc_grad_rho_a_2(:), vc_grad_rho_b_2(:), vc_grad_rho_a_b(:)
  allocate(vc_rho_a(N_states), vc_rho_b(N_states), vx_rho_a(N_states), vx_rho_b(N_states))
- allocate(vx_grad_rho_a_2(N_states), vx_grad_rho_b_2(N_states), vx_grad_rho_a_b(N_states), vc_grad_rho_a_2(N_states), vc_grad_rho_b_2(N_states), vc_grad_rho_a_b(N_states))
+ allocate(vx_grad_rho_a_2(N_states), vx_grad_rho_b_2(N_states), vx_grad_rho_a_b(N_states), vc_grad_rho_a_2(N_states), vc_grad_rho_b_2(N_states), vc_grad_rho_a_b(N_states), energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states))
 
 
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
  allocate(grad_rho_a_2(N_states),grad_rho_b_2(N_states),grad_rho_a_b(N_states), ex(N_states), ec(N_states), delta_n_m_grad_n(N_states), gamma_n_m_grad_n(N_states), beta_n_m_grad_n(N_states))
  
- energy_x_sr_pbe_md = 0.d0
- energy_c_sr_pbe_md = 0.d0
+ energy_x_sr_pbe_md_copy = 0.d0
+ energy_c_sr_pbe_md_copy = 0.d0
  pi = dacos(-1.d0)
  a = pi/2.d0
  b = 2.d0*dsqrt(pi)*(2.d0*dsqrt(2.d0) - 1.d0)/3.d0
@@ -76,10 +77,12 @@
    delta_n_m_grad_n(istate) = -(b*n2_ueg*gamma_n_m_grad_n(istate)**2)/ex(istate)
    beta_n_m_grad_n(istate)  = ec(istate)/(c*n2_ueg)
    
-   energy_x_sr_pbe_md += (ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight 
-   energy_c_sr_pbe_md += (ec/(1.d0 + beta_n_m_grad_n*mu**3)) * weight
+   energy_x_sr_pbe_md_copy += (ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight 
+   energy_c_sr_pbe_md_copy += (ec/(1.d0 + beta_n_m_grad_n*mu**3)) * weight
+   
+   print*, 'energy_x_sr_pbe_md_copy(istate=',istate,'i=',i,')=',(ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight,' Sum is now: ', energy_x_sr_pbe_md_copy
   enddo
  enddo
 
 
-END_PROVIDER             
+end program
