@@ -18,7 +18,7 @@
  END_DOC
  integer :: istate,i,j,m
  double precision :: r(3)
- double precision :: mu,weight, delta_n_m_grad_n, gamma_n_m_grad_n, beta_n_m_grad_n, n2_xc_ueg, n2_ueg, a, b, c, g0, zeta_var, pi, g0_UEG_mu
+ double precision :: mu,weight, delta_n_m_grad_n, gamma_n_m_grad_n, beta_n_m_grad_n, n2_xc_ueg, n2_ueg, a, b, c, g0, zeta_var, pi, g0_UEG_mu, g0_UEG_mu_inf
  double precision, allocatable :: ex(:), ec(:)
  double precision, allocatable :: rho_a(:),rho_b(:),grad_rho_a(:,:),grad_rho_b(:,:),grad_rho_a_2(:),grad_rho_b_2(:),grad_rho_a_b(:)
  double precision, allocatable :: contrib_grad_xa(:,:),contrib_grad_xb(:,:),contrib_grad_ca(:,:),contrib_grad_cb(:,:)
@@ -36,7 +36,7 @@
  a = pi/2.d0
  b = 2.d0*dsqrt(pi)*(2.d0*dsqrt(2.d0) - 1.d0)
  c = 2.d0*dsqrt(pi)*(1.d0 - dsqrt(2.d0))/3.d0
- mu = 10.d0**(-9)
+ mu = 0.5d0
 
  do istate = 1, N_states
   do i = 1, n_points_final_grid
@@ -65,15 +65,16 @@
 
    zeta_var = (rho_a(istate) - rho_b(istate))/(rho_a(istate) + rho_b(istate))
    g0 = g0_UEG_mu(mu, rho_a,rho_b)
-   n2_ueg = ((rho_a(istate) + rho_b(istate))**2)*(1 - zeta_var**2)*g0
+   !g0 = g0_UEG_mu_inf(rho_a,rho_b)
+   n2_ueg = ((rho_a(istate) + rho_b(istate))**2)*(1.d0 - zeta_var**2)*g0
    n2_xc_ueg = n2_ueg - (rho_a(istate) + rho_b(istate))**2
 
-   gamma_n_m_grad_n = ex/(a*n2_xc_ueg)
-   delta_n_m_grad_n = -(b*n2_ueg*gamma_n_m_grad_n**2)/ex
-   beta_n_m_grad_n  = ec/(c*n2_ueg)
+   gamma_n_m_grad_n = ex(istate)/(a*n2_xc_ueg)
+   delta_n_m_grad_n = -(b*n2_ueg*gamma_n_m_grad_n**2)/ex(istate)
+   beta_n_m_grad_n  = ec(istate)/(c*n2_ueg)
 
-   energy_x_sr_pbe_md += ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2) * weight
-   energy_c_sr_pbe_md += ec/(1.d0 + beta_n_m_grad_n*mu**3) * weight
+   energy_x_sr_pbe_md += (ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight
+   energy_c_sr_pbe_md += (ec/(1.d0 + beta_n_m_grad_n*mu**3)) * weight
   enddo
  enddo
 
