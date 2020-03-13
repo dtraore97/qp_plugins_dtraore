@@ -76,8 +76,8 @@
    delta_n_m_grad_n(istate) = -(b*n2_ueg*gamma_n_m_grad_n(istate)**2)/ex(istate)
    beta_n_m_grad_n(istate)  = ec(istate)/(c*n2_ueg)
    
-   energy_x_sr_pbe_md += (ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight 
-   energy_c_sr_pbe_md += (ec/(1.d0 + beta_n_m_grad_n*mu**3)) * weight
+   energy_x_sr_pbe_md(istate)+=  ex(istate)*weight / ( 1.d0 + delta_n_m_grad_n(istate)*mu + gamma_n_m_grad_n(istate)*mu**2)
+   energy_c_sr_pbe_md(istate)+=  ec(istate)*weight / ( 1.d0 + beta_n_m_grad_n(istate)*mu**3 )
   enddo
  enddo
 
