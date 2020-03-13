@@ -42,6 +42,9 @@ program energy_x_c_md_test
  c = 2.d0*dsqrt(pi)*(1.d0 - dsqrt(2.d0))/3.d0
  mu = 0.5d0
 
+ print*, 'n-points_final_grid= ', n_points_final_grid
+ print*, 'N_states= ', N_states
+ 
  do istate = 1, N_states
   do i = 1, n_points_final_grid
    r(1) = final_grid_points(1,i)
@@ -67,20 +70,25 @@ program energy_x_c_md_test
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
 
-   zeta_var = (rho_a(istate) - rho_b(istate))/(rho_a(istate) + rho_b(istate))
-   g0 = g0_UEG_mu(mu, rho_a(istate),rho_b(istate))
+   zeta_var = (rho_a(istate) - rho_b(istate))/(rho_a(istate) + rho_b(istate)) ! = 0 for spin multiplicity = 1
+   ! zeta_var = mu / ( ((4d0/(9d0*pi))**(1d0/3d0)) * ((3d0 / (4d0*pi*(rho_a(istate)+rho_b(istate))))**(1d0/3d0)) )**(1d0)
+  !  print*, 'zeta_var=', zeta_var
+   g0 = g0_UEG_mu(mu, rho_a(istate),rho_b(istate)) !ordre de grandeur ok
+   ! print*, 'g0=',g0
    !g0 = g0_UEG_mu_inf(rho_a,rho_b)
-   n2_ueg = ((rho_a(istate) + rho_b(istate))**2)*(1.d0 - zeta_var**2)*g0
+   n2_ueg = ((rho_a(istate) + rho_b(istate))**2)*(1d0 - zeta_var**2)*g0
+   !print*, 'n2_ueg=', n2_ueg
    n2_xc_ueg = n2_ueg - (rho_a(istate) + rho_b(istate))**2
-
+   !print*, 'n2_xc_ueg=', n2_xc_ueg
    gamma_n_m_grad_n(istate) = ex(istate)/(a*n2_xc_ueg)
+   !print*, 'gamma_n_m_grad=', gamma_n_m_grad_n(istate)
    delta_n_m_grad_n(istate) = -(b*n2_ueg*gamma_n_m_grad_n(istate)**2)/ex(istate)
    beta_n_m_grad_n(istate)  = ec(istate)/(c*n2_ueg)
    
-   energy_x_sr_pbe_md_copy += (ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight 
-   energy_c_sr_pbe_md_copy += (ec/(1.d0 + beta_n_m_grad_n*mu**3)) * weight
+   energy_x_sr_pbe_md_copy(istate) += (ex(istate)/(1.d0 + delta_n_m_grad_n(istate)*mu + gamma_n_m_grad_n(istate)*mu**2)) * weight 
+   energy_c_sr_pbe_md_copy(istate) += (ec(istate)/(1.d0 + beta_n_m_grad_n(istate)*mu**3)) * weight
    
-   print*, 'energy_x_sr_pbe_md_copy(istate=',istate,'i=',i,')=',(ex/(1.d0 + delta_n_m_grad_n*mu + gamma_n_m_grad_n*mu**2)) * weight,' Sum is now: ', energy_x_sr_pbe_md_copy
+  ! print*, 'energy_x_sr_pbe_md_copy(istate=',istate,'i=',i,')=',(ex(istate)/(1.d0 + delta_n_m_grad_n(istate)*mu + gamma_n_m_grad_n(istate)*mu**2)) * weight,' Sum is now: ', energy_x_sr_pbe_md_copy(istate)
   enddo
  enddo
 
