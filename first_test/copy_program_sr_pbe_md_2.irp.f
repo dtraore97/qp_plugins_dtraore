@@ -28,8 +28,8 @@ program energy_x_c_md_test_2
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
  allocate(grad_rho_a_2(N_states),grad_rho_b_2(N_states),grad_rho_a_b(N_states), ex(N_states), ec(N_states))
  
- energy_x_sr_pbe = 0.d0
- energy_c_sr_pbe = 0.d0
+ energy_x_sr_pbe_md_copy = 0.d0
+ energy_c_sr_pbe_md_copy = 0.d0
 
 !----------------Constantes------------------ 
  pi = dacos(-1.d0)
@@ -67,7 +67,7 @@ program energy_x_c_md_test_2
    rho = rho_a + rho_b
    m_spin = rho_a - rho_b
    zeta_m_n = m_spin/rho
-   g0 = g0_UEG_mu(mu, rho_a, rho_b) ! g0 is arrow of size n (???)
+   g0 = g0_UEG_mu(mu, rho_a, rho_b)
    n2_UEG = (rho**2)*(1.0d0 - zeta_m_n**2)*g0
    n2_xc_UEG = n2_UEG - rho**2
    
