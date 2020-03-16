@@ -1,7 +1,13 @@
+#Ne sachant comment manipuler plusieurs fichiers dans un seul programme, j'ai lancé le programme pour chacune des parties ci-dessous. Les résultats que j'ai obtenus sont disponibles dans le svn ontopfun.
+
+#Chaque print comporte le paramètre d'intérêt en première position et les paramètres nécessaires à son calcul ensuite.
+
 print*, 'rho =', rho, 'rho_a =', rho_a, 'rho_b =', rho_b
 print*, 'm =', m_spin, 'rho_a =', rho_a, 'rho_b =', rho_b
 print*, 'zeta_m_n =', zeta_m_n, 'rho= ', 'm = ', m_spin
 print*, 'g0 =', g0
 print*, 'n2_UEG = ', n2_UEG, 'rho= ', rho, 'zeta_m_n= ', zeta_m_n, 'g0= ', g0
 print*, 'n2_xc_UEG= ', n2_xc_UEG, 'n2_UEG= ', n2_UEG, 'rho= ', rho
-print*, 'bet_n_m 
+print*, 'beta_n_m_delta_n= ', beta_n_m_delta_n, 'ec= ', ec, 'c=', c, 'n2_UEG= ', n2_UEG
+print*, 'delta_n_m_delta_n= ', delta_n_m_delta_n, 'ex= ', ex, 'b= ', b, 'n2_UEG= ', n2_UEG
+print*, 'gamma_n_m_delta_n= ', gamma_n_m_delta_n, 'ex =', ex, 'a= ', a, 'n2_xc_UEG= ', n2_xc_UEG
