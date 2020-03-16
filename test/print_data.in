@@ -1,0 +1,7 @@
+print*, 'rho =', rho, 'rho_a =', rho_a, 'rho_b =', rho_b
+print*, 'm =', m_spin, 'rho_a =', rho_a, 'rho_b =', rho_b
+print*, 'zeta_m_n =', zeta_m_n, 'rho= ', 'm = ', m_spin
+print*, 'g0 =', g0
+print*, 'n2_UEG = ', n2_UEG, 'rho= ', rho, 'zeta_m_n= ', zeta_m_n, 'g0= ', g0
+print*, 'n2_xc_UEG= ', n2_xc_UEG, 'n2_UEG= ', n2_UEG, 'rho= ', rho
+print*, 'bet_n_m 
