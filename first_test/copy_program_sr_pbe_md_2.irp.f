@@ -1,10 +1,35 @@
 program energy_x_c_md_test_2
-! BEGIN_PROVIDER[double precision, energy_x_sr_pbe_2, (N_states) ]
-!&BEGIN_PROVIDER[double precision, energy_c_sr_pbe_2, (N_states) ]
+
  implicit none
  BEGIN_DOC
 ! exchange/correlation energy with the short range pbe functional, multideterminantal form (VERSION 2)
+! 11/03/20 Modified version of qp_plugins_eginer/stable/rsdft_cipsi/functionals/sr_pbe.irp.f
 ! This program aim to test the providers from sr_pbe_version_2.irp.f
+! ------------------------------------------PARAMETERS-------------------------------------------------
+! a, b and c                   : Constants                                               eq. 45 and 47 
+! beta_n_m_grad_n              :                                                         eq. 50
+! contrib_grad                 : 
+! delta_n_m_grad_n             :                                                         eq. 57
+! energy_c_sr_pbe_md_copy      : Sum(ec_prime*weight)                                    eq. 48
+! energy_x_sr_pbe_md_copy      : Sum(ex_prime*weight)                                    eq. 53
+! ex & ec                      : ec_PBE & ex_PBE                                         eq. 49 and 54
+! ex_prime & ec_prime          : exchange and correlation energies perelementaty volume  eq. 54 and 49
+! gamma_n_m_grad_n             :                                                         eq. 55
+! g0_UEG_mu  (g0)              : from rsdft_ecmd/ueg_on_top.irp.f
+! grad_rho_a & grad_rho_b      : gradient of the densities of spin alpha and beta
+! grad_rho_a_2 & grad_rho_b_2  : square root of grad_rho_a & grad_rho_b
+! grad_rho_a_b                 : grad_rho_a*grad_rho_b
+! m_spin                       : rho_a - rho_b
+! mu                           : interaction parameter (constant for the moment)
+! n2_UEG                       : On top pair density of the uniform electron gas         eq. 51
+! n2_xc_UEG                    : on top exchange/correlation pair density of the UEG     eq. 55
+! rho                          : rho_a + rho_b
+! rho_a & rho_b                : densities of spin alpha and beta
+! vc_rho_a & vc_rho_b          :
+! vx_rho_a & vx_rho_b          :
+! weight                       : dr
+! zeta_m_n                     : m/n
+! ----------------------------------------------------------------------------------------------------
  END_DOC
  integer :: istate,i,j,m
  double precision :: r(3)
