@@ -40,14 +40,16 @@ program energy_x_c_md_test_2
  double precision, allocatable :: vc_rho_a(:), vc_rho_b(:), vx_rho_a(:), vx_rho_b(:)
  double precision, allocatable :: vx_grad_rho_a_2(:), vx_grad_rho_b_2(:), vx_grad_rho_a_b(:), vc_grad_rho_a_2(:), vc_grad_rho_b_2(:), vc_grad_rho_a_b(:)
 !-----------Added-----------
- double precision :: pi, a, b, c, g0_UEG_mu
- double precision, allocatable :: rho(:), m_spin(:), zeta_m_n(:), g0(:), n2_UEG(:), n2_xc_UEG(:), ec_prime(:), ex_prime(:), beta_n_m_delta_n(:), delta_n_m_delta_n(:), gamma_n_m_delta_n(:), energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
+ double precision :: pi, a, b, c, g0_UEG_mu, thr
+! double precision, allocatable :: rho(:), m_spin(:), zeta_m_n(:), g0(:), n2_UEG(:), n2_xc_UEG(:), ec_prime(:), ex_prime(:), beta_n_m_delta_n(:), delta_n_m_delta_n(:), gamma_n_m_delta_n(:), energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
+ double precision :: rho, m_spin, zeta_m_n, g0, n2_UEG, n2_xc_UEG, ec_prime, ex_prime, beta_n_m_delta_n, delta_n_m_delta_n, gamma_n_m_delta_n
+ double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
 !---------------------------
 
  allocate(vc_rho_a(N_states), vc_rho_b(N_states), vx_rho_a(N_states), vx_rho_b(N_states))
  allocate(vx_grad_rho_a_2(N_states), vx_grad_rho_b_2(N_states), vx_grad_rho_a_b(N_states), vc_grad_rho_a_2(N_states), vc_grad_rho_b_2(N_states), vc_grad_rho_a_b(N_states))
 !-----------Added------------
- allocate(rho(N_states), m_spin(N_states), zeta_m_n(N_states), g0(N_states), n2_UEG(N_states), n2_xc_UEG(N_states), ec_prime(N_states), ex_prime(N_states), beta_n_m_delta_n(N_states), delta_n_m_delta_n(N_states), gamma_n_m_delta_n(N_states), energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states))
+ allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states))
 !----------------------------
 
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
@@ -62,10 +64,10 @@ program energy_x_c_md_test_2
  b = 2*dsqrt(pi)*(2*dsqrt(2.d0) - 1.d0)/3.d0  
  c = 2*dsqrt(pi)*(1.d0 - dsqrt(2.d0))/3.d0
  mu = 0.5d0
+ thr = 1.d-12
 !--------------------------------------------
-
- do istate = 1, N_states
-  do i = 1, n_points_final_grid
+ do i = 1, n_points_final_grid ! do1
+  do istate = 1, N_states ! do2
    r(1) = final_grid_points(1,i)
    r(2) = final_grid_points(2,i)
    r(3) = final_grid_points(3,i)
@@ -77,36 +79,70 @@ program energy_x_c_md_test_2
    grad_rho_a_2 = 0.d0
    grad_rho_b_2 = 0.d0
    grad_rho_a_b = 0.d0
-   do m = 1, 3
+   do m = 1, 3 ! do3
     grad_rho_a_2(istate) += grad_rho_a(m,istate) * grad_rho_a(m,istate)
     grad_rho_b_2(istate) += grad_rho_b(m,istate) * grad_rho_b(m,istate)
     grad_rho_a_b(istate) += grad_rho_a(m,istate) * grad_rho_b(m,istate)
-   enddo
-
+   enddo ! do3
+  enddo !enddo2
                              ! inputs
    call GGA_sr_type_functionals(r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
    
-   ! Define the variables below as arrows of size N_states
-   rho = rho_a + rho_b
-   m_spin = rho_a - rho_b
-   zeta_m_n = m_spin/rho
-   g0 = g0_UEG_mu(mu, rho_a, rho_b)
-   n2_UEG = (rho**2)*(1.0d0 - zeta_m_n**2)*g0
-   n2_xc_UEG = n2_UEG - rho**2
+   do istate = 1, N_states ! do4
+     rho = rho_a(istate) + rho_b(istate)
+     if(dabs(rho).lt.thr)then
+       rho = 1.d-12
+     endif
+     
+     m_spin = rho_a(istate) - rho_b(istate) !0.0000
+     if(dabs(m_spin).lt.thr)then
+       m_spin = 1.d-12
+     endif
+      
+     zeta_m_n = m_spin/rho !0.00000
+     if(dabs(zeta_m_n).lt.thr)then
+       zeta_m_n = 1.d-12
+     endif
+
+     g0 = g0_UEG_mu(mu, rho_a(istate), rho_b(istate))
+     if(dabs(g0).lt.thr)then
+       g0 = 1.d-12
+     endif
+
+     n2_UEG = (rho**2)*(1.0d0 - zeta_m_n**2)*g0
+     if(dabs(n2_UEG).lt.thr)then
+       n2_UEG = 1.d-12
+     endif
+
+     n2_xc_UEG = n2_UEG - rho**2
+     if(dabs(n2_xc_UEG).lt.thr)then
+       n2_xc_UEG = 1.d-12
+     endif
+
+     ! a, b and c defined before the loop
+     beta_n_m_delta_n = ec(istate) / (c*n2_UEG)
+     if(dabs(beta_n_m_delta_n).lt.thr)then
+       beta_n_m_delta_n = 1.d-12
+     endif
+
+     gamma_n_m_delta_n = ex(istate) / (a*n2_xc_UEG)
+     if(dabs(gamma_n_m_delta_n).lt.thr)then
+       gamma_n_m_delta_n = 1.d-12
+     endif
+
+     delta_n_m_delta_n = - b*n2_UEG*gamma_n_m_delta_n**2 / ex(istate)
+     if(dabs(delta_n_m_delta_n).lt.thr)then
+       delta_n_m_delta_n = 1.d-12
+     endif
+
+     ec_prime = ec(istate) / (1.0d0 + beta_n_m_delta_n*mu**3)
+     ex_prime = ex(istate) / (1.0d0 + delta_n_m_delta_n*mu + gamma_n_m_delta_n*mu**2)
    
-   ! a, b, c defined before the loop
-   beta_n_m_delta_n = ec / (c*n2_UEG)
-   delta_n_m_delta_n = - b*n2_UEG**2 / ex
-   gamma_n_m_delta_n = ex / (a*n2_xc_UEG)
- 
-   ec_prime = ec / (1.0d0 + beta_n_m_delta_n*mu**3)
-   ex_prime = ex / (1.0d0 + delta_n_m_delta_n*mu + gamma_n_m_delta_n*mu**2)
-   
-   energy_c_sr_pbe_md_copy += ec_prime * weight
-   energy_x_sr_pbe_md_copy += ex_prime * weight
-  
+     energy_c_sr_pbe_md_copy(istate) += ec_prime * weight
+     energy_x_sr_pbe_md_copy(istate) += ex_prime * weight
+   enddo !do4
    !--------------- Print : Tested on H2O cc-pvdz ----------------
 
    !rho               : rho_copy_program_sr_pbe_md_2.dat
@@ -120,8 +156,10 @@ program energy_x_c_md_test_2
    !gamma_n_m_delta_n : gamma_copy_program_sr_pbe_md_2.dat  
    !ec_prime          : ecprime_copy_program_sr_pbe_md_2.dat
    !ex_prime          : ex_prime_copy_program_sr_pbe_md_2.dat
-  enddo
- enddo
+
+ enddo !enddo1
+   print*, 'energy_c_sr_pbe_md_copy=', energy_c_sr_pbe_md_copy(1), 'energy_c_sr_pbe=', energy_c_sr_pbe
+   print*, 'energy_x_sr_pbe_md_copy=', energy_x_sr_pbe_md_copy(1), 'energy_x_sr_pbe=', energy_x_sr_pbe
 
 end program
 !END_PROVIDER
