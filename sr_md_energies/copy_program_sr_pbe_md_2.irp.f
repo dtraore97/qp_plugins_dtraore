@@ -1,7 +1,10 @@
 program energy_x_c_md_test_2
  implicit none
  BEGIN_DOC
-! Last modification : Tues., March 17th, 4.05pm 
+! Last modification : Thurs., March 19th, 6.25pm
+! WARNING: This version contains some mistakes that will be checked tomorrow
+! 
+! Wedn., March 18th : arrays for r and rho : check with Julien's Mathematica's program
 ! exchange/correlation energy with the short range pbe functional, multideterminantal form (VERSION 2)
 ! 11/03/20 Modified version of qp_plugins_eginer/stable/rsdft_cipsi/functionals/sr_pbe.irp.f
 ! This program aim to test the providers from sr_pbe_version_2.irp.f
@@ -10,11 +13,15 @@ program energy_x_c_md_test_2
 ! beta_n_m_grad_n              :                                                         eq. 50
 ! contrib_grad                 : 
 ! delta_n_m_grad_n             :                                                         eq. 57
+! energy_c_sr_pbe_copy         : Non md case
+! energy_x_sr_pbe_copy         : Non md case 
 ! energy_c_sr_pbe_md_copy      : Sum(ec_prime*weight)                                    eq. 48
 ! energy_x_sr_pbe_md_copy      : Sum(ex_prime*weight)                                    eq. 53
 ! ex & ec                      : ec_PBE & ex_PBE                                         eq. 49 and 54
 ! ex_prime & ec_prime          : exchange and correlation energies perelementaty volume  eq. 54 and 49
 ! gamma_n_m_grad_n             :                                                         eq. 55
+! GGA_sr_type_functionals      : Emmanuel's                                              dft_utils_one_e/utils.irp.f
+! GGA_sr_type_functionals_mu   : Modified version of GGA_sr_type_functionals where mu is intent(in) so we can have Ecsr value for a given mu
 ! g0_UEG_mu  (g0)              : from rsdft_ecmd/ueg_on_top.irp.f
 ! grad_rho_a & grad_rho_b      : gradient of the densities of spin alpha and beta
 ! grad_rho_a_2 & grad_rho_b_2  : square root of grad_rho_a & grad_rho_b
@@ -40,16 +47,17 @@ program energy_x_c_md_test_2
  double precision, allocatable :: vc_rho_a(:), vc_rho_b(:), vx_rho_a(:), vx_rho_b(:)
  double precision, allocatable :: vx_grad_rho_a_2(:), vx_grad_rho_b_2(:), vx_grad_rho_a_b(:), vc_grad_rho_a_2(:), vc_grad_rho_b_2(:), vc_grad_rho_a_b(:)
 !-----------Added-----------
- double precision :: pi, a, b, c, g0_UEG_mu, thr
+ integer :: test_r, k, p
+ double precision :: pi, a, b, c, g0_UEG_mu, thr, r_norm
 ! double precision, allocatable :: rho(:), m_spin(:), zeta_m_n(:), g0(:), n2_UEG(:), n2_xc_UEG(:), ec_prime(:), ex_prime(:), beta_n_m_delta_n(:), delta_n_m_delta_n(:), gamma_n_m_delta_n(:), energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
  double precision :: rho, m_spin, zeta_m_n, g0, n2_UEG, n2_xc_UEG, ec_prime, ex_prime, beta_n_m_delta_n, delta_n_m_delta_n, gamma_n_m_delta_n
- double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
+ double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:), energy_x_sr_pbe_copy(:), energy_c_sr_pbe_copy(:), r_norm_prec(:), mu_array(:), ex_pbe(:), ec_pbe(:)
 !---------------------------
 
  allocate(vc_rho_a(N_states), vc_rho_b(N_states), vx_rho_a(N_states), vx_rho_b(N_states))
  allocate(vx_grad_rho_a_2(N_states), vx_grad_rho_b_2(N_states), vx_grad_rho_a_b(N_states), vc_grad_rho_a_2(N_states), vc_grad_rho_b_2(N_states), vc_grad_rho_a_b(N_states))
 !-----------Added------------
- allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states))
+ allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states), energy_x_sr_pbe_copy(N_states), energy_c_sr_pbe_copy(N_states),r_norm_prec(n_points_final_grid), mu_array(20), ex_pbe(N_states), ec_pbe(N_states))
 !----------------------------
 
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
@@ -57,15 +65,23 @@ program energy_x_c_md_test_2
  
  energy_x_sr_pbe_md_copy = 0.d0
  energy_c_sr_pbe_md_copy = 0.d0
+ energy_x_sr_pbe_copy = 0.d0
+ energy_c_sr_pbe_copy = 0.d0
 
+
+ r_norm_prec = 0.d0
 !----------------Constantes------------------ 
  pi = dacos(-1.d0)
  a = pi/2.d0
  b = 2*dsqrt(pi)*(2*dsqrt(2.d0) - 1.d0)/3.d0  
  c = 2*dsqrt(pi)*(1.d0 - dsqrt(2.d0))/3.d0
- mu = 1.d12
+ !mu = 1.d12
+ mu_array = (/ 0.d0, 0.125d0, 0.25d0, 0.375d0, 0.5d0, 0.625d0, 0.75d0, 0.875d0, 1.d0, 1.5d0, 2.d0, 2.5d0, 3.d0, 4.d0, 5.d0, 6.d0, 7.d0, 8.d0, 9.d0, 10.d0 /)
  thr = 1.d-12
+ r_norm_prec = 1.d-12
 !--------------------------------------------
+do p = 1, 20
+ mu = mu_array(p)
  do i = 1, n_points_final_grid ! do1
   do istate = 1, N_states ! do2
    r(1) = final_grid_points(1,i)
@@ -86,11 +102,20 @@ program energy_x_c_md_test_2
    enddo ! do3
   enddo !enddo2
                              ! inputs
-   call GGA_sr_type_functionals(r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
-                             ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
-                             ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
+   call GGA_sr_type_functionals_mu(mu,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
+                             ex_pbe,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
+                             ec_pbe,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
    
+   call GGA_sr_type_functionals(r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
+                             ex_pbe,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
+                             ec_pbe,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
+
    do istate = 1, N_states ! do4
+     
+    if(dabs(ex(istate)).lt.thr)then
+       ex(istate) = 1.d-12
+     endif
+
      rho = rho_a(istate) + rho_b(istate)
      if(dabs(rho).lt.thr)then
        rho = 1.d-12
@@ -139,7 +164,9 @@ program energy_x_c_md_test_2
 
      ec_prime = ec(istate) / (1.0d0 + beta_n_m_delta_n*mu**3)
      ex_prime = ex(istate) / (1.0d0 + delta_n_m_delta_n*mu + gamma_n_m_delta_n*mu**2)
-   
+     
+     energy_c_sr_pbe_copy(istate) += ec_pbe(istate) * weight
+     energy_x_sr_pbe_copy(istate) += ex_pbe(istate) * weight 
      energy_c_sr_pbe_md_copy(istate) += ec_prime * weight
      energy_x_sr_pbe_md_copy(istate) += ex_prime * weight
    enddo !do4
@@ -157,9 +184,36 @@ program energy_x_c_md_test_2
    !ec_prime          : ecprime_copy_program_sr_pbe_md_2.dat
    !ex_prime          : ex_prime_copy_program_sr_pbe_md_2.dat
 
- enddo !enddo1
-   print*, 'energy_c_sr_pbe_md_copy=', energy_c_sr_pbe_md_copy(1), 'energy_c_sr_pbe=', energy_c_sr_pbe
-   print*, 'energy_x_sr_pbe_md_copy=', energy_x_sr_pbe_md_copy(1), 'energy_x_sr_pbe=', energy_x_sr_pbe
+!-------------------- rho(r) bloc ------------------------
+  ! r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
+   
+  ! test_r=0
 
+  ! do k=1, i
+     !if(r_norm == r_norm_prec(k))then
+      ! test_r = 1
+       !exit
+     !endif
+
+  !   if(dabs(r_norm - r_norm_prec(i-1)) < 1.d-10)then
+  !     test_r = 1
+  !   endif
+  ! enddo
+   
+  ! r_norm_prec(i) = r_norm
+   
+  ! if(test_r==0)then
+     !write(*,'(e15.10,x,e15.10)')  r_norm, rho  
+    ! print*, r_norm, rho
+  ! endif
+!--------------------------------------------------------
+
+ enddo 
+ !  print*, 'energy_c_sr_pbe_md_copy=', energy_c_sr_pbe_md_copy(1), 'energy_c_sr_pbe=', energy_c_sr_pbe
+ !  print*, 'energy_x_sr_pbe_md_copy=', energy_x_sr_pbe_md_copy(1), 'energy_x_sr_pbe=', energy_x_sr_pbe
+
+   print*, mu, energy_c_sr_pbe_copy(1)
+   ! print*, 'energy_x_sr_pbe_md_copy=', energy_x_sr_pbe_md_copy(1), 'energy_x_sr_pbe=', energy_x_sr_pbe
+enddo
 end program
 !END_PROVIDER

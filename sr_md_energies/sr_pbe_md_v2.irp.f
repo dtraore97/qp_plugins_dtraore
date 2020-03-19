@@ -459,7 +459,7 @@ END_PROVIDER
      call dgemm('N','T',ao_num,ao_num,n_points_final_grid,1.d0,                                                                                         &
                  aos_sr_vxc_beta_pbe_w_md(1,1,istate),size(aos_sr_vxc_beta_pbe_w_md,1),                                                                       &
                  aos_in_r_array,size(aos_in_r_array,1),1.d0,                                                                                            &
-                 pot_sr_scal_xc_beta_ao_pbe(_md1,1,istate),size(pot_sr_scal_xc_beta_ao_pbe_md,1))
+                 pot_sr_scal_xc_beta_ao_pbe_md(1,1,istate),size(pot_sr_scal_xc_beta_ao_pbe_md,1))
    enddo
  call wall_time(wall_2)
 
