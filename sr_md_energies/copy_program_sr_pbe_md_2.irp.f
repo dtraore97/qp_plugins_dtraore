@@ -80,7 +80,19 @@ program energy_x_c_md_test_2
  thr = 1.d-12
  r_norm_prec = 1.d-12
 !--------------------------------------------
-do p = 1, 20
+!-------------------FILES--------------------
+! rho(r) file for a given mu
+OPEN(UNIT=14, FILE='rho_r_he_ccpvdz.dat')
+! With multideterminantal extension
+OPEN(UNIT=10, FILE='mu_ecsr_md_he_ccpvdz20.dat')
+OPEN(UNIT=11, FILE='mu_exsr_md_he_ccpvdz20.dat')
+! Without md extension
+OPEN(UNIT=12, FILE='mu_ecsr_he_ccpvdz20.dat')
+OPEN(UNIT=13, FILE='mu_exsr_he_ccpvdz20.dat')
+!--------------------------------------------
+
+
+do p = 1, 20  ! loop over mu_array
  mu = mu_array(p)
  do i = 1, n_points_final_grid ! do1
   do istate = 1, N_states ! do2
@@ -107,8 +119,8 @@ do p = 1, 20
                              ec_pbe,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
    
    call GGA_sr_type_functionals(r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
-                             ex_pbe,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
-                             ec_pbe,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
+                             ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
+                             ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
 
    do istate = 1, N_states ! do4
      
@@ -185,35 +197,36 @@ do p = 1, 20
    !ex_prime          : ex_prime_copy_program_sr_pbe_md_2.dat
 
 !-------------------- rho(r) bloc ------------------------
-  ! r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
+   r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
    
-  ! test_r=0
+   test_r=0
 
-  ! do k=1, i
-     !if(r_norm == r_norm_prec(k))then
-      ! test_r = 1
-       !exit
-     !endif
+   do k=1, i
+     if(r_norm == r_norm_prec(k))then
+       test_r = 1
+       exit
+     endif
 
-  !   if(dabs(r_norm - r_norm_prec(i-1)) < 1.d-10)then
-  !     test_r = 1
-  !   endif
-  ! enddo
+     if(dabs(r_norm - r_norm_prec(i-1)) < 1.d-10)then
+       test_r = 1
+     endif
+   enddo
    
-  ! r_norm_prec(i) = r_norm
+   r_norm_prec(i) = r_norm
    
-  ! if(test_r==0)then
-     !write(*,'(e15.10,x,e15.10)')  r_norm, rho  
-    ! print*, r_norm, rho
-  ! endif
+   if(test_r==0)then
+     write(14,*) mu,' ', r_norm, ' ',rho  
+     print*, r_norm, rho
+   endif
 !--------------------------------------------------------
 
- enddo 
- !  print*, 'energy_c_sr_pbe_md_copy=', energy_c_sr_pbe_md_copy(1), 'energy_c_sr_pbe=', energy_c_sr_pbe
- !  print*, 'energy_x_sr_pbe_md_copy=', energy_x_sr_pbe_md_copy(1), 'energy_x_sr_pbe=', energy_x_sr_pbe
+ enddo
+ 
+ write(10, *) mu, ' ', energy_c_sr_pbe_md_copy(1)
+ write(11, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
+ write(12, *) mu, ' ', energy_c_sr_pbe_copy(1)
+ write(13, *) mu, ' ', energy_x_sr_pbe_copy(1)
 
-   print*, mu, energy_c_sr_pbe_copy(1)
-   ! print*, 'energy_x_sr_pbe_md_copy=', energy_x_sr_pbe_md_copy(1), 'energy_x_sr_pbe=', energy_x_sr_pbe
 enddo
 end program
 !END_PROVIDER
