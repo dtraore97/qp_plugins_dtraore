@@ -1,7 +1,7 @@
 program energy_x_c_md_test_2
  implicit none
  BEGIN_DOC
-! Last modification : Thurs., March 19th, 6.25pm
+! Last modification : Sun., March 22th, 11.00am
 ! WARNING: This version contains some mistakes that will be checked tomorrow
 ! 
 ! Wedn., March 18th : arrays for r and rho : check with Julien's Mathematica's program
