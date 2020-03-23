@@ -66,8 +66,6 @@ program energy_x_c_md_test_2
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
  allocate(grad_rho_a_2(N_states),grad_rho_b_2(N_states),grad_rho_a_b(N_states), ex(N_states), ec(N_states))
  
-
-
  r_norm_prec = 0.d0
 !----------------Constantes------------------ 
  pi = dacos(-1.d0)
@@ -121,7 +119,7 @@ do p = 1, 20  ! loop over mu_array  !do1
    enddo !do4
   enddo ! do3
                              ! inputs
-  call GGA_sr_type_functionals_mu(1.d-12,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
+  call GGA_sr_type_functionals(rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b,   &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  ) 
    
@@ -187,7 +185,7 @@ do p = 1, 20  ! loop over mu_array  !do1
      energy_x_pbe_copy(istate) += ex(istate) * weight 
      energy_c_sr_pbe_md_copy(istate) += ec_prime * weight
      energy_x_sr_pbe_md_copy(istate) += ex_prime * weight
-     r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
+    ! r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
     ! print*, rho, grad_rho_2, mu, ex_prime, ec_prime
   enddo !enddo5
 !--------------------rho(r)----------------------------
@@ -216,10 +214,10 @@ do p = 1, 20  ! loop over mu_array  !do1
 !--------------------------------------------------------
  enddo !do2
 
- write(i_unit_output1, *) mu, ' ', energy_c_sr_pbe_md_copy(1)
- write(i_unit_output2, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
- write(i_unit_output3, *) mu, ' ', energy_c_pbe_copy(1)
- write(i_unit_output4, *) mu, ' ', energy_x_pbe_copy(1)
+ !write(i_unit_output1, *) mu, ' ', energy_c_sr_pbe_md_copy(1)
+ !write(i_unit_output2, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
+ !write(i_unit_output3, *) mu, ' ', energy_c_pbe_copy(1)
+ !write(i_unit_output4, *) mu, ' ', energy_x_pbe_copy(1)
 
 enddo !enddo1
 end program
