@@ -1,13 +1,11 @@
 program energy_x_c_md_test_2
  implicit none
  BEGIN_DOC
-! Last modification : Sun., March 22th, 11.00am
-! WARNING: This version contains some mistakes that will be checked tomorrow
-! 
-! Wedn., March 18th : arrays for r and rho : check with Julien's Mathematica's program
+! ATTENTION: ce programme n'est pas à jour - voir provider_sr_pbe_md.irp.f
+! Last modification : Mon., March 23th
 ! exchange/correlation energy with the short range pbe functional, multideterminantal form (VERSION 2)
 ! 11/03/20 Modified version of qp_plugins_eginer/stable/rsdft_cipsi/functionals/sr_pbe.irp.f
-! This program aim to test the providers from sr_pbe_version_2.irp.f
+! This program aim to test the providers from provider_sr_pbe_md.irp.f
 ! ------------------------------------------PARAMETERS-------------------------------------------------
 ! a, b and c                   : Constants                                               eq. 45 and 47 
 ! beta_n_m_grad_n              :                                                         eq. 50
@@ -66,7 +64,7 @@ program energy_x_c_md_test_2
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
  allocate(grad_rho_a_2(N_states),grad_rho_b_2(N_states),grad_rho_a_b(N_states), ex(N_states), ec(N_states))
  
- r_norm_prec = 0.d0
+
 !----------------Constantes------------------ 
  pi = dacos(-1.d0)
  a = pi/2.d0
@@ -93,18 +91,21 @@ PROVIDE ezfio_filename
 do p = 1, 20  ! loop over mu_array  !do1 
  print*, mu_array(p)
  mu = mu_array(p)
-!mu = 0.5d0
+! mu = 0.5d0
  energy_x_sr_pbe_md_copy = 0.d0
  energy_c_sr_pbe_md_copy = 0.d0
  energy_x_pbe_copy = 0.d0
  energy_c_pbe_copy = 0.d0
+ print*, 'rho    ', 'grad_rho_2    ', 'mu    ', 'E_c_pbe    ', 'E_x_pbe    ', 'E_c_sr_pbe_md    ', 'E_x_sr_pbe_md    '
+ 
  do i = 1, n_points_final_grid !do2
   r(1) = final_grid_points(1,i)
   r(2) = final_grid_points(2,i)
   r(3) = final_grid_points(3,i)
   weight = final_weight_at_r_vector(i)
-  
+
   do istate = 1, N_states !do3
+   !print*,'istate=', istate
    rho_a(istate) =  one_e_dm_and_grad_alpha_in_r(4,i,istate)
    rho_b(istate) =  one_e_dm_and_grad_beta_in_r(4,i,istate)
    grad_rho_a(1:3,istate) =  one_e_dm_and_grad_alpha_in_r(1:3,i,istate)
@@ -112,20 +113,21 @@ do p = 1, 20  ! loop over mu_array  !do1
    grad_rho_a_2 = 0.d0
    grad_rho_b_2 = 0.d0
    grad_rho_a_b = 0.d0
-   do m = 1, 3 !do4 
+   
+  do m = 1, 3 !do4 
     grad_rho_a_2(istate) += grad_rho_a(m,istate) * grad_rho_a(m,istate)
     grad_rho_b_2(istate) += grad_rho_b(m,istate) * grad_rho_b(m,istate)
     grad_rho_a_b(istate) += grad_rho_a(m,istate) * grad_rho_b(m,istate)
    enddo !do4
-  enddo ! do3
-                             ! inputs
-  call GGA_sr_type_functionals(rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
+  enddo ! do3  
+                           ! inputs
+  call GGA_sr_type_functionals_mu(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b,   &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  ) 
-   
+ 
    do istate = 1, N_states !do5
-    print*, 'ex(',istate,')=', ex(istate)
-    print*, 'ec(',istate,')=', ec(istate) 
+    !print*, 'ex(',istate,')=', ex(istate)
+    !print*, 'ec(',istate,')=', ec(istate) 
     if(dabs(ex(istate)).lt.thr)then
        ex(istate) = 1.d-12
      endif
@@ -185,40 +187,41 @@ do p = 1, 20  ! loop over mu_array  !do1
      energy_x_pbe_copy(istate) += ex(istate) * weight 
      energy_c_sr_pbe_md_copy(istate) += ec_prime * weight
      energy_x_sr_pbe_md_copy(istate) += ex_prime * weight
-    ! r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
-    ! print*, rho, grad_rho_2, mu, ex_prime, ec_prime
+     print*, 'rho    ', 'grad_rho_2    ', 'mu    ', 'e_c_pbe    ', 'e_x_pbe    ', 'e_c_sr_pbe_md    ', 'e_x_sr_pbe_md    '
+     print*, rho, grad_rho_2, mu, ec(istate), ex(istate), ec_prime, ex_prime
   enddo !enddo5
 !--------------------rho(r)----------------------------
 !------------To run for a given value of mu------------
-  ! r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
+ !  r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
    
-  ! test_r=0
+ !  test_r=0
 
-  ! do k=1, i
-  !   if(r_norm == r_norm_prec(k))then
-  !     test_r = 1
-  !     exit
-  !   endif
+ !  do k=1, i
+ !    if((r_norm - r_norm_prec(k)) < 1.d-10)then
+ !      test_r = 1
+ !      exit
+ !    endif
 
-  !   if(dabs(r_norm - r_norm_prec(i-1)) < 1.d-10)then
-  !     test_r = 1
-  !   endif
-  ! enddo
+ !   ! if(dabs(r_norm - r_norm_prec(k-1)) < 1.d-10)then
+ !   !   test_r = 1
+ !   ! endif
+ !  enddo
    
-  ! r_norm_prec(i) = r_norm
-  ! 
-  ! if(test_r==0)then
-  !   write(14,*) mu,' ', r_norm, ' ',rho  
-     ! print*, r_norm, rho
-  ! endif
+ !  r_norm_prec(i) = r_norm
+   
+ !  if(test_r==0)then
+ !     !write(14,*) mu,' ', r_norm, ' ',rho  
+ !     print*, r_norm, rho
+ !  endif
 !--------------------------------------------------------
  enddo !do2
 
- !write(i_unit_output1, *) mu, ' ', energy_c_sr_pbe_md_copy(1)
- !write(i_unit_output2, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
- !write(i_unit_output3, *) mu, ' ', energy_c_pbe_copy(1)
- !write(i_unit_output4, *) mu, ' ', energy_x_pbe_copy(1)
+! write(i_unit_output1, *) mu, ' ', energy_c_sr_pbe_md_copy(1)
+! write(i_unit_output2, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
+! write(i_unit_output3, *) mu, ' ', energy_c_pbe_copy(1)
+! write(i_unit_output4, *) mu, ' ', energy_x_pbe_copy(1)
 
+!
 enddo !enddo1
 end program
 !END_PROVIDER
