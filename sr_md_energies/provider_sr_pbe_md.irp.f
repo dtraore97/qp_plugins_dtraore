@@ -84,7 +84,7 @@ do i = 1, n_points_final_grid
   enddo
  enddo   
                            ! inputs
- call GGA_sr_type_functionals_mu(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
+ call GGA_sr_type_functionals_mu_ok(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b,   &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  ) 
  
@@ -200,7 +200,7 @@ END_PROVIDER
    enddo
 
                              ! inputs
-   call GGA_sr_type_functionals_mu(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
+   call GGA_sr_type_functionals_mu_ok(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,                 &  ! outputs exchange
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  )
    vx_rho_a(istate) *= weight

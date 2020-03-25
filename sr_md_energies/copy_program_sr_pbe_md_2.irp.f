@@ -102,6 +102,7 @@ do p = 1, 20  ! loop over mu_array  !do1
   r(1) = final_grid_points(1,i)
   r(2) = final_grid_points(2,i)
   r(3) = final_grid_points(3,i)
+  r_norm = dsqrt(r(1)**2 + r(2)**2 + r(3)**2)
   weight = final_weight_at_r_vector(i)
 
   do istate = 1, N_states !do3
@@ -121,7 +122,7 @@ do p = 1, 20  ! loop over mu_array  !do1
    enddo !do4
   enddo ! do3  
                            ! inputs
-  call GGA_sr_type_functionals_mu(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
+  call GGA_sr_type_functionals_mu_ok(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
                              ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b,   &  ! outputs correlation
                              ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  ) 
  
@@ -187,8 +188,8 @@ do p = 1, 20  ! loop over mu_array  !do1
      energy_x_pbe_copy(istate) += ex(istate) * weight 
      energy_c_sr_pbe_md_copy(istate) += ec_prime * weight
      energy_x_sr_pbe_md_copy(istate) += ex_prime * weight
-     print*, 'rho    ', 'grad_rho_2    ', 'mu    ', 'e_c_pbe    ', 'e_x_pbe    ', 'e_c_sr_pbe_md    ', 'e_x_sr_pbe_md    '
-     print*, rho, grad_rho_2, mu, ec(istate), ex(istate), ec_prime, ex_prime
+     print*, 'r    ','rho    ', 'grad_rho_2    ', 'mu    ', 'e_c_pbe    ', 'e_x_pbe    ', 'e_c_sr_pbe_md    ', 'e_x_sr_pbe_md    '
+     print*, r_norm, rho, grad_rho_2, mu, ec(istate), ex(istate), ec_prime, ex_prime
   enddo !enddo5
 !--------------------rho(r)----------------------------
 !------------To run for a given value of mu------------
