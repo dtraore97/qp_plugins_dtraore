@@ -52,13 +52,13 @@ program energy_x_c_md_test_2
  double precision :: pi, a, b, c, g0_UEG_mu_inf, thr, r_norm, grad_rho_2
 ! double precision, allocatable :: rho(:), m_spin(:), zeta_m_n(:), g0(:), n2_UEG(:), n2_xc_UEG(:), ec_prime(:), ex_prime(:), beta_n_m_delta_n(:), delta_n_m_delta_n(:), gamma_n_m_delta_n(:), energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
  double precision :: rho, m_spin, zeta_m_n, g0, n2_UEG, n2_xc_UEG, ec_prime, ex_prime, beta_n_m_delta_n, delta_n_m_delta_n, gamma_n_m_delta_n
- double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:), energy_x_pbe_copy(:), energy_c_pbe_copy(:), r_norm_prec(:), mu_array(:)
+ double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:), energy_x_pbe_copy(:), energy_c_pbe_copy(:), r_norm_prec(:), mu_array(:), mu_tab(:)
 !---------------------------
 
  allocate(vc_rho_a(N_states), vc_rho_b(N_states), vx_rho_a(N_states), vx_rho_b(N_states))
  allocate(vx_grad_rho_a_2(N_states), vx_grad_rho_b_2(N_states), vx_grad_rho_a_b(N_states), vc_grad_rho_a_2(N_states), vc_grad_rho_b_2(N_states), vc_grad_rho_a_b(N_states))
 !-----------Added------------
- allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states), energy_x_pbe_copy(N_states), energy_c_pbe_copy(N_states),r_norm_prec(n_points_final_grid), mu_array(20))
+ allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states), energy_x_pbe_copy(N_states), energy_c_pbe_copy(N_states),r_norm_prec(n_points_final_grid), mu_array(20), mu_tab(n_points_final_grid))
 !----------------------------
 
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
@@ -74,6 +74,7 @@ program energy_x_c_md_test_2
  mu_array = (/ 0.d0, 0.125d0, 0.25d0, 0.375d0, 0.5d0, 0.625d0, 0.75d0, 0.875d0, 1.d0, 1.5d0, 2.d0, 2.5d0, 3.d0, 4.d0, 5.d0, 6.d0, 7.d0, 8.d0, 9.d0, 10.d0 /)
  thr = 1.d-12
  r_norm_prec = 1.d-12
+ mu_tab = 1.d-12
 !--------------------------------------------
 !-------------------FILES--------------------
 PROVIDE ezfio_filename
@@ -88,15 +89,15 @@ PROVIDE ezfio_filename
  i_unit_output4 = getUnitAndOpen(output4, 'w')
  !output5='rho_rho2'//trim(ezfio_filename)//'.dat'
  
-do p = 1, 20  ! loop over mu_array  !do1 
- print*, mu_array(p)
- mu = mu_array(p)
-! mu = 0.5d0
+!do p = 1, 20  ! loop over mu_array  !do1 
+! print*, mu_array(p)
+! mu = mu_array(p)
+ mu = 0.5d0
  energy_x_sr_pbe_md_copy = 0.d0
  energy_c_sr_pbe_md_copy = 0.d0
  energy_x_pbe_copy = 0.d0
  energy_c_pbe_copy = 0.d0
- print*, 'rho    ', 'grad_rho_2    ', 'mu    ', 'E_c_pbe    ', 'E_x_pbe    ', 'E_c_sr_pbe_md    ', 'E_x_sr_pbe_md    '
+ !print*, 'rho    ', 'grad_rho_2    ', 'mu    ', 'E_c_pbe    ', 'E_x_pbe    ', 'E_c_sr_pbe_md    ', 'E_x_sr_pbe_md    '
  
  do i = 1, n_points_final_grid !do2
   r(1) = final_grid_points(1,i)
@@ -188,8 +189,19 @@ do p = 1, 20  ! loop over mu_array  !do1
      energy_x_pbe_copy(istate) += ex(istate) * weight 
      energy_c_sr_pbe_md_copy(istate) += ec_prime * weight
      energy_x_sr_pbe_md_copy(istate) += ex_prime * weight
-     print*, 'r    ','rho    ', 'grad_rho_2    ', 'mu    ', 'e_c_pbe    ', 'e_x_pbe    ', 'e_c_sr_pbe_md    ', 'e_x_sr_pbe_md    '
-     print*, r_norm, rho, grad_rho_2, mu, ec(istate), ex(istate), ec_prime, ex_prime
+    ! print*, 'r    ','rho    ', 'grad_rho_2    ', 'mu    ', 'e_c_pbe    ', 'e_x_pbe    ', 'e_c_sr_pbe_md    ', 'e_x_sr_pbe_md    '
+     test_r = 0
+     do k=1, i
+        if ((r_norm - r_norm_prec(k)) < 1.d-10 .AND. (mu - mu_tab(k)) < 1.d-10) then
+           test_r = 1
+           exit
+        endif
+     enddo
+     r_norm_prec(i) = r_norm
+     mu_tab(i) = mu
+     if(test_r==0)then
+     ! print*, r_norm, rho, grad_rho_2, mu, ec(istate), ex(istate), ec_prime, ex_prime
+     endif
   enddo !enddo5
 !--------------------rho(r)----------------------------
 !------------To run for a given value of mu------------
@@ -221,8 +233,8 @@ do p = 1, 20  ! loop over mu_array  !do1
 ! write(i_unit_output2, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
 ! write(i_unit_output3, *) mu, ' ', energy_c_pbe_copy(1)
 ! write(i_unit_output4, *) mu, ' ', energy_x_pbe_copy(1)
-
+print*, 'Ex_sr_pbe_md=', energy_x_sr_pbe_md_copy(1), 'Ec_sr_pbe_md=', energy_c_sr_pbe_md_copy(1)
 !
-enddo !enddo1
+!enddo !enddo1
 end program
 !END_PROVIDER
