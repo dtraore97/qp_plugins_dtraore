@@ -52,13 +52,13 @@ program energy_x_c_md_test_2
  double precision :: pi, a, b, c, g0_UEG_mu_inf, thr, r_norm, grad_rho_2
 ! double precision, allocatable :: rho(:), m_spin(:), zeta_m_n(:), g0(:), n2_UEG(:), n2_xc_UEG(:), ec_prime(:), ex_prime(:), beta_n_m_delta_n(:), delta_n_m_delta_n(:), gamma_n_m_delta_n(:), energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:)
  double precision :: rho, m_spin, zeta_m_n, g0, n2_UEG, n2_xc_UEG, ec_prime, ex_prime, beta_n_m_delta_n, delta_n_m_delta_n, gamma_n_m_delta_n
- double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:), energy_x_pbe_copy(:), energy_c_pbe_copy(:), r_norm_prec(:), mu_array(:), mu_tab(:)
+ double precision, allocatable :: energy_x_sr_pbe_md_copy(:), energy_c_sr_pbe_md_copy(:), energy_x_pbe_copy(:), energy_c_pbe_copy(:), r_norm_prec(:), mu_array(:), mu_tab(:), vc_rho_sr_pbe_md(:),vc_grad_rho_sr_pbe_md(:),vx_rho_sr_pbe_md(:),vx_grad_rho_sr_pbe_md(:)
 !---------------------------
 
  allocate(vc_rho_a(N_states), vc_rho_b(N_states), vx_rho_a(N_states), vx_rho_b(N_states))
  allocate(vx_grad_rho_a_2(N_states), vx_grad_rho_b_2(N_states), vx_grad_rho_a_b(N_states), vc_grad_rho_a_2(N_states), vc_grad_rho_b_2(N_states), vc_grad_rho_a_b(N_states))
 !-----------Added------------
- allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states), energy_x_pbe_copy(N_states), energy_c_pbe_copy(N_states),r_norm_prec(n_points_final_grid), mu_array(20), mu_tab(n_points_final_grid))
+ allocate(energy_x_sr_pbe_md_copy(N_states), energy_c_sr_pbe_md_copy(N_states), energy_x_pbe_copy(N_states), energy_c_pbe_copy(N_states),r_norm_prec(n_points_final_grid), mu_array(20), mu_tab(n_points_final_grid), vc_rho_sr_pbe_md(N_states),vc_grad_rho_sr_pbe_md(N_states), vx_rho_sr_pbe_md(N_states),vx_grad_rho_sr_pbe_md(N_states))
 !----------------------------
 
  allocate(rho_a(N_states), rho_b(N_states),grad_rho_a(3,N_states),grad_rho_b(3,N_states))
@@ -123,9 +123,9 @@ PROVIDE ezfio_filename
    enddo !do4
   enddo ! do3  
                            ! inputs
-  call GGA_sr_type_functionals_mu_ok(1.d-12,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
-                             ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b,   &  ! outputs correlation
-                             ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b  ) 
+  call GGA_sr_type_functionals_mu(1.d-12,mu,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,         &  ! outputs exchange      
+                             ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b,vx_rho_sr_pbe_md,vx_grad_rho_sr_pbe_md,   &  ! outputs correlation
+                             ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b,vc_rho_sr_pbe_md,vc_grad_rho_sr_pbe_md) 
  
    do istate = 1, N_states !do5
     !print*, 'ex(',istate,')=', ex(istate)
@@ -201,7 +201,9 @@ PROVIDE ezfio_filename
      mu_tab(i) = mu
      if(test_r==0)then
      ! print*, r_norm, rho, grad_rho_2, mu, ec(istate), ex(istate), ec_prime, ex_prime
+      print*, rho, r_norm, vc_rho_sr_pbe_md(istate)+vc_grad_rho_sr_pbe_md(istate), vx_rho_sr_pbe_md(istate)+vx_grad_rho_sr_pbe_md(istate)
      endif
+     
   enddo !enddo5
 !--------------------rho(r)----------------------------
 !------------To run for a given value of mu------------
@@ -227,13 +229,14 @@ PROVIDE ezfio_filename
  !     print*, r_norm, rho
  !  endif
 !--------------------------------------------------------
+
  enddo !do2
 
 ! write(i_unit_output1, *) mu, ' ', energy_c_sr_pbe_md_copy(1)
 ! write(i_unit_output2, *) mu, ' ', energy_x_sr_pbe_md_copy(1)
 ! write(i_unit_output3, *) mu, ' ', energy_c_pbe_copy(1)
 ! write(i_unit_output4, *) mu, ' ', energy_x_pbe_copy(1)
-print*, 'Ex_sr_pbe_md=', energy_x_sr_pbe_md_copy(1), 'Ec_sr_pbe_md=', energy_c_sr_pbe_md_copy(1)
+!print*, 'Ex_sr_pbe_md=', energy_x_sr_pbe_md_copy(1), 'Ec_sr_pbe_md=', energy_c_sr_pbe_md_copy(1)
 !
 !enddo !enddo1
 end program
