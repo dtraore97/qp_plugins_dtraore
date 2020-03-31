@@ -1,7 +1,7 @@
 
 subroutine GGA_sr_type_functionals_mu(mu_usual,mu,r,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
-                             ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, vx_rho_sr_pbe_md, vx_grad_rho_sr_pbe_md, &
-                             ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b, vc_rho_sr_pbe_md, vc_grad_rho_sr_pbe_md)
+       ex,vx_rho_a,vx_rho_b,vx_grad_rho_a_2,vx_grad_rho_b_2,vx_grad_rho_a_b, vx_rho_sr_pbe_md1, vx_rho_sr_pbe_md2, vx_rho_sr_pbe_md3, &
+       ec,vc_rho_a,vc_rho_b,vc_grad_rho_a_2,vc_grad_rho_b_2,vc_grad_rho_a_b, vc_rho_sr_pbe_md, vc_grad_rho_sr_pbe_md)
  
  implicit none
  BEGIN_DOC
@@ -51,7 +51,7 @@ subroutine GGA_sr_type_functionals_mu(mu_usual,mu,r,rho_a,rho_b,grad_rho_a_2,gra
  !----------------------------------------------------------------------------------------------------------------------------------- 
  END_DOC
  double precision, intent(in)  :: r(3),rho_a(N_states),rho_b(N_states),grad_rho_a_2(N_states),grad_rho_b_2(N_states),grad_rho_a_b(N_states),mu, mu_usual
- double precision, intent(out) :: ex(N_states),vx_rho_a(N_states),vx_rho_b(N_states),vx_grad_rho_a_2(N_states),vx_grad_rho_b_2(N_states),vx_grad_rho_a_b(N_states), vx_rho_sr_pbe_md(N_states), vx_grad_rho_sr_pbe_md(N_states)
+ double precision, intent(out) :: ex(N_states),vx_rho_a(N_states),vx_rho_b(N_states),vx_grad_rho_a_2(N_states),vx_grad_rho_b_2(N_states),vx_grad_rho_a_b(N_states), vx_rho_sr_pbe_md1(N_states), vx_rho_sr_pbe_md2(N_states), vx_rho_sr_pbe_md3(N_states)
  double precision, intent(out) :: ec(N_states),vc_rho_a(N_states),vc_rho_b(N_states),vc_grad_rho_a_2(N_states),vc_grad_rho_b_2(N_states),vc_grad_rho_a_b(N_states), vc_rho_sr_pbe_md(N_states), vc_grad_rho_sr_pbe_md(N_states) 
  integer          :: istate
  double precision :: r2(3),dr2(3), local_potential,r12,dx2, pi, a, b, c, rho, grad_rho, grad_rho_a, grad_rho_b, ex_PBE, ec_PBE, dexPBE_drho, ddexPBE_ddrho, decPBE_drho, n2_UEG, n2xc_UEG, g0, dg0_drho, g0_UEG_mu_inf, beta_rho, dbeta_drho, dbeta_decPBE, gamma_rho, delta_rho, dgammamu2_drho, dgamma_drho, ddeltamu_drho, C1, F1, D1, E1, B1, rs, dg0_drs 
@@ -115,8 +115,16 @@ subroutine GGA_sr_type_functionals_mu(mu_usual,mu,r,rho_a,rho_b,grad_rho_a_2,gra
  ddeltamu_drho  = -mu*b*( (2*g0*rho*gamma_rho**2)/(ex_PBE) +  ((gamma_rho**2)*(rho**2)/(ex_PBE))*dg0_drho + ((2.d0*gamma_rho*n2_UEG)/ex_PBE)*dgamma_drho - (n2_UEG*gamma_rho**2/(ex_PBE**2))*dexPBE_drho )                                                     ! Copy OK 
 
  ! EXCHANGE POTENTIAL
- vx_rho_sr_pbe_md(istate)      = dexPBE_drho*(1.d0/(1.d0 + delta_rho*mu + gamma_rho*mu**2)) - ex_PBE*((ddeltamu_drho + dgammamu2_drho)/((1.d0 + delta_rho*mu + gamma_rho*mu**2)**2))                                 ! OK
- vx_grad_rho_sr_pbe_md(istate) = 2.d0*grad_rho*ddexPBE_ddrho*(1.d0/(1.d0 + delta_rho*mu + gamma_rho**2))*(1.d0 -(mu/(a*n2xc_UEG))  - (b*n2_UEG*gamma_rho**2)/((ex_PBE**2)*(1.d0 + delta_rho*mu + gamma_rho*mu**2)))  ! OK
+ vx_rho_sr_pbe_md1(istate)      = dexPBE_drho*(1.d0/(1.d0 + delta_rho*mu + gamma_rho*mu**2)) - ex_PBE*((ddeltamu_drho + dgammamu2_drho)/((1.d0 + delta_rho*mu + gamma_rho*mu**2)**2))                                ! NON
+ vx_rho_sr_pbe_md2(istate)      = (mu*ex_PBE/((1.d0 + gamma_rho*mu**2 + delta_rho*mu)**2)) * ( -mu*(dexPBE_drho*(1.d0/(a*n2xc_UEG)) - (ex_PBE/a)*((2.d0*rho*(g0 - 1.d0))/(n2xc_UEG**2))) + b*((2.d0*rho*g0*gamma_rho**2)/(ex_PBE) + ((2.d0*gamma_rho*n2_UEG)/ex_PBE)*dgamma_drho) - ((n2_UEG*gamma_rho**2)/(ex_PBE**2))*dexPBE_drho ) + dexPBE_drho*(1.d0/(1.d0 + gamma_rho*mu**2 + delta_rho*mu)) ! EN COURS DE TEST
+ 
+ double precision :: Part1, Part2, Part21, Part22
+  Part1                         = -(mu/((1.d0 + gamma_rho*mu**2 + delta_rho*mu)**2))*( (dexPBE_drho/(a*n2xc_UEG)) + (ex_PBE/(a*n2xc_UEG**2))*(2.d0*rho*(g0-1.d0) + (rho**2)*dg0_drho) )
+  Part21                        = -(b*n2_UEG/ex_PBE)*2.d0*gamma_rho*(dexPBE_drho/(a*n2xc_UEG) - (ex_PBE/(a*n2xc_UEG**2))*(2.d0*rho*(g0-1.d0)+(rho**2)*dg0_drho))
+  Part22                        = ((b*n2_UEG*gamma_rho**2)/(ex_PBE**2))*dexPBE_drho - ((b*gamma_rho**2)/ex_PBE)*(2.d0*rho*g0 + (rho**2)*dg0_drho)
+  Part2                         = (mu/((1.d0 + gamma_rho*mu**2 + delta_rho*mu)**2))*( Part21 + Part22  )
+ vx_rho_sr_pbe_md3(istate)       = dexPBE_drho*(1.d0/(1.d0 + gamma_rho*mu**2 + delta_rho*mu)) + ex_PBE*(Part1 + Part2 )
+! vx_grad_rho_sr_pbe_md(istate) = 2.d0*grad_rho*ddexPBE_ddrho*(1.d0/(1.d0 + delta_rho*mu + gamma_rho**2))*(1.d0 -(mu/(a*n2xc_UEG))  - (b*n2_UEG*gamma_rho**2)/((ex_PBE**2)*(1.d0 + delta_rho*mu + gamma_rho*mu**2)))  ! NON
 
  ! CORRELATION POTENTIAL
  vc_rho_sr_pbe_md(istate)      = (1.d0 /(1.d0+beta_rho*mu**3))*(decPBE_drho) - ((ec_PBE*mu**3)/((1.d0 +beta_rho*mu**3)**2))*(dbeta_drho)
