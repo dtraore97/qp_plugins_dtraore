@@ -44,8 +44,8 @@
  !----------------------------------------------------------------------------------------------------------------------------------- 
 
 subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
-       ex_srmuPBE,dexdrho_a,dexdrho_b,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b, &
-       ec_srmuPBE,decdrho_a,decdrho_b,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b)
+       ex_srmuPBE,dexdrho_a,dexdrho_b,dexdrho,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b, dexdgrad_rho_2, &
+       ec_srmuPBE,decdrho_a,decdrho_b,decdrho,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b, decdgrad_rho_2)
  
  implicit none
  BEGIN_DOC
@@ -54,11 +54,12 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
  END_DOC
  double precision, intent(in)  :: mu
  double precision, intent(in)  :: rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b
- double precision, intent(out) :: ex_srmuPBE,dexdrho_a,dexdrho_b,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b
- double precision, intent(out) :: ec_srmuPBE,decdrho_a,decdrho_b,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b
+ double precision, intent(out) :: ex_srmuPBE,dexdrho_a,dexdrho_b,dexdrho,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b, dexdgrad_rho_2
+ double precision, intent(out) :: ec_srmuPBE,decdrho_a,decdrho_b,decdrho,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b, decdgrad_rho_2
 
- call exmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ex_srmuPBE,dexdrho_a,dexdrho_b,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b)
- call ecmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ec_srmuPBE,decdrho_a,decdrho_b,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b)
+ call exmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ex_srmuPBE,dexdrho_a,dexdrho_b,dexdrho,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b,dexdgrad_rho_2)
+
+ call ecmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ec_srmuPBE,decdrho_a,decdrho_b,decdrho,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b, decdgrad_rho_2)
 
  end subroutine excmdsrPBE
 
@@ -89,9 +90,9 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   dg0drho = -((6.d0*dsqrt(pi)*rho**2)**(-2.d0/3.d0))*dg0drs
  
   end subroutine g0_dg0 
-
+  
 !-------------------------------------------------------------------------------------------------------------------------------------------
-  subroutine exmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ex_srmuPBE,dexdrho_a,dexdrho_b,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b)
+  subroutine exmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ex_srmuPBE,dexdrho_a,dexdrho_b, dexdrho, dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b,dexdgrad_rho_2)
   
   implicit none
   BEGIN_DOC
@@ -99,10 +100,10 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   END_DOC
   double precision, intent(in)  :: mu
   double precision, intent(in)  :: rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b
-  double precision, intent(out) :: ex_srmuPBE,dexdrho_a,dexdrho_b,dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b
-  double precision              :: exPBE,dexPBEdrho_a,dexPBEdrho_b, dexPBEdrho, dexPBEdgrad_rho_a_2,dexPBEdgrad_rho_b_2,dexPBEdgrad_rho_a_b
-  double precision              :: dexdrho, gamma, dgammadrho, delta, ddeltadrho, denom, ddenomdrho
-  double precision              :: pi, a, b
+  double precision, intent(out) :: ex_srmuPBE,dexdrho_a,dexdrho_b, dexdrho, dexdgrad_rho_a_2,dexdgrad_rho_b_2,dexdgrad_rho_a_b, dexdgrad_rho_2
+  double precision              :: exPBE,dexPBEdrho_a,dexPBEdrho_b, dexPBEdrho, dexPBEdgrad_rho_a_2,dexPBEdgrad_rho_b_2,dexPBEdgrad_rho_a_b, dexPBEdgrad_rho_2
+  double precision              :: gamma, dgammadrho, dgammadgrad_rho_2, delta, ddeltadrho, ddeltadgrad_rho_2, denom, ddenomdrho, ddenomdgrad_rho_2
+  double precision              :: pi, a, b, thr
   double precision              :: rho, m  
   double precision              :: n2_UEG, dn2_UEGdrho, n2xc_UEG, dn2xc_UEGdrho, g0, dg0drho
 ! 
@@ -118,18 +119,47 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   pi = dacos(-1.d0)
   rho = rho_a + rho_b
   m = rho_a - rho_b
-
+  thr = 1.d-12
 ! exchange PBE standard
   call ex_pbe_sr(1.d-12,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,exPBE,dexPBEdrho_a,dexPBEdrho_b,dexPBEdgrad_rho_a_2,dexPBEdgrad_rho_b_2,dexPBEdgrad_rho_a_b)
   call g0_dg0(rho, rho_a, rho_b, g0, dg0drho)
+  
+  if(dabs(exPBE).lt.thr)then
+   exPBE = 1.d-12
+  endif
+
+  if(dabs(rho).lt.thr)then
+   rho = 1.d-12
+  endif
+
+  if(dabs(g0).lt.thr)then
+    g0 = 1.d-12
+  endif
 
 ! calculation of energy
   a = pi / 2.d0
   b = 2*dsqrt(pi)*(2*dsqrt(2.d0) - 1.d0)/3.d0   
+  
   n2_UEG = (rho**2)*g0
+  if(dabs(n2_UEG).lt.thr)then
+   n2_UEG = 1.d-12
+  endif
+  
   n2xc_UEG = n2_UEG - rho**2
+  if(dabs(n2xc_UEG).lt.thr)then
+   n2xc_UEG = 1.d-12
+  endif
+
   gamma = exPBE / (a*n2xc_UEG)
-  delta = -b*n2_UEG*gamma**2 / exPBE
+  if(dabs(gamma).lt.thr)then
+   gamma = 1.d-12
+  endif
+
+  delta = -(b*n2_UEG*gamma**2) / exPBE
+  if(dabs(delta).lt.thr)then
+   delta = 1.d-12
+  endif
+  
   denom = 1.d0 + delta*mu + gamma*(mu**2)
 
   ex_srmuPBE=exPBE/denom
@@ -139,15 +169,25 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   dn2_UEGdrho = 2.d0*rho*g0 + (rho**2)*dg0drho
   dn2xc_UEGdrho = dn2_UEGdrho - 2.d0*rho
 
-  dgammadrho = (1.d0/(a*n2xc_UEG))*dexPBEdrho  + (exPBE/(a*n2xc_UEG**2))*dn2xc_UEGdrho
+  dgammadrho = (1.d0/(a*n2xc_UEG))*dexPBEdrho  - (exPBE/(a*n2xc_UEG**2))*dn2xc_UEGdrho
   ddeltadrho = -((b*gamma**2)/exPBE)*dn2_UEGdrho -(b*n2_UEG/exPBE)*2.d0*gamma*dgammadrho + (b*n2_UEG*gamma**2)/(exPBE**2)*dexPBEdrho
 
   ddenomdrho = ddeltadrho * mu + dgammadrho * (mu**2)
   dexdrho = dexPBEdrho/denom - exPBE*ddenomdrho/denom**2
+  dexdrho_a = dexdrho
+  dexdrho_b = dexdrho
  
+  !--------------
+  dexPBEdgrad_rho_2 = 0.25d0 *(dexPBEdgrad_rho_a_2 + dexPBEdgrad_rho_b_2 + dexPBEdgrad_rho_a_b)
+  
+  dgammadgrad_rho_2 = dexPBEdgrad_rho_2/(a*n2xc_UEG)
+  ddeltadgrad_rho_2 = ((b*n2_UEG*gamma**2)/(exPBE**2))*dexPBEdgrad_rho_2 - b*(n2_UEG/exPBE)*2*gamma*dgammadgrad_rho_2
+
+  ddenomdgrad_rho_2 = ddeltadgrad_rho_2*mu + dgammadgrad_rho_2*mu**2
+  dexdgrad_rho_2 = dexPBEdgrad_rho_2/denom - exPBE*ddenomdgrad_rho_2/(denom**2)
   end subroutine exmdsrPBE
 !---------------------------------------------------------------------------------------------------------------------------------------------
-  subroutine ecmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ec_srmuPBE,decdrho_a,decdrho_b,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b)
+  subroutine ecmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ec_srmuPBE,decdrho_a,decdrho_b, decdrho, decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b, decdgrad_rho_2)
 
   implicit none
   BEGIN_DOC
@@ -156,38 +196,65 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
  
   double precision, intent(in)  :: mu
   double precision, intent(in)  :: rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b
-  double precision, intent(out) :: ec_srmuPBE,decdrho_a,decdrho_b,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b
-  double precision              :: ecPBE,decPBEdrho_a,decPBEdrho_b, decPBEdrho, decPBEdgrad_rho_a_2,decPBEdgrad_rho_b_2,decPBEdgrad_rho_a_b 
-  double precision              :: rho_c, rho_o,grad_rho_c_2,grad_rho_o_2,grad_rho_c_o,decPBEdrho_c,decPBEdrho_o,decPBEdgrad_rho_c_2,decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_o
-  double precision              :: decdrho, beta, dbetadrho, denom, ddenomdrho
-  double precision              :: pi, c
+  double precision, intent(out) :: ec_srmuPBE,decdrho_a,decdrho_b,decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b, decdgrad_rho_2, decdrho
+  double precision              :: ecPBE,decPBEdrho_a,decPBEdrho_b,decPBEdgrad_rho_2,decPBEdrho, decPBEdgrad_rho_a_2,decPBEdgrad_rho_b_2,decPBEdgrad_rho_a_b
+  double precision              :: rho_c, rho_o,grad_rho_c_2,grad_rho_o_2,grad_rho_o_c,decPBEdrho_c,decPBEdrho_o,decPBEdgrad_rho_c_2,decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_o
+  double precision              :: beta, dbetadrho, dbetadgrad_rho_2, denom, ddenomdrho, ddenomdgrad_rho_2
+  double precision              :: pi, c, thr
   double precision              :: rho, m  
   double precision              :: n2_UEG, dn2_UEGdrho, n2xc_UEG, dn2xc_UEGdrho, g0, dg0drho
  
   pi = dacos(-1.d0)
   rho = rho_a + rho_b
   m = rho_a - rho_b
+  thr = 1.d-12
+  
+  call rho_ab_to_rho_oc(rho_a,rho_b,rho_o,rho_c)
+  call grad_rho_ab_to_grad_rho_oc(grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,grad_rho_o_2,grad_rho_c_2,grad_rho_o_c)
 
 ! correlation PBE standard
-  call ex_pbe_sr(1.d-12,rho_c,rho_o,grad_rho_c_2,grad_rho_o_2,grad_rho_c_o,ecPBE,decPBEdrho_c,decPBEdrho_o,decPBEdgrad_rho_c_2,decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_o)
+  
+  call ec_pbe_sr(1.d-12,rho_c,rho_o,grad_rho_c_2,grad_rho_o_2,grad_rho_o_c,ecPBE,decPBEdrho_c,decPBEdrho_o,decPBEdgrad_rho_c_2,decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_o)
   call v_rho_oc_to_v_rho_ab(decPBEdrho_o, decPBEdrho_c, decPBEdrho_a, decPBEdrho_b)
   call v_grad_rho_oc_to_v_grad_rho_ab(decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_2, decPBEdgrad_rho_c_o, decPBEdgrad_rho_a_2, decPBEdgrad_rho_b_2, decPBEdgrad_rho_a_b)
   call g0_dg0(rho, rho_a, rho_b, g0, dg0drho)
 
 ! calculation of energy
   c = 2*dsqrt(pi)*(1.d0 - dsqrt(2.d0))/3.d0
-  n2_UEG = rho**2*g0
+  n2_UEG = (rho**2)*g0
+  if(dabs(n2_UEG).lt.thr)then
+   n2_UEG = 1.d-12
+  endif  
+  
   beta = ecPBE/(c*n2_UEG)
+  if(dabs(beta).lt.thr)then
+   beta = 1.d-12
+  endif
+
   denom = 1.d0 + beta*mu**3
   ec_srmuPBE=ecPBE/denom
 
 ! calculation of derivatives 
+  !--------------------
   decPBEdrho = 0.5d0 *(decPBEdrho_a + decPBEdrho_b)
+
   dn2_UEGdrho = 2.d0*rho*g0 + (rho**2)*dg0drho
+
   dbetadrho = decPBEdrho/(c*n2_UEG) - (ecPBE/(c*n2_UEG**2))*dn2_UEGdrho
   ddenomdrho = dbetadrho*mu**3
+
   decdrho = decPBEdrho/denom - ecPBE*ddenomdrho/(denom**2)
- 
+  decdrho_a = decdrho
+  decdrho_b = decdrho
+
+  !---------------------  
+  decPBEdgrad_rho_2 = 0.25d0 *(decPBEdgrad_rho_a_2 + decPBEdgrad_rho_b_2 + decPBEdgrad_rho_a_b)
+  
+  dbetadgrad_rho_2 = decPBEdgrad_rho_2/(c*n2_UEG)
+  ddenomdgrad_rho_2 = dbetadgrad_rho_2*mu**3
+  
+  decdgrad_rho_2 = decPBEdgrad_rho_2/denom - ecPBE*ddenomdgrad_rho_2/(denom**2)
+   
   end subroutine ecmdsrPBE
 
 
