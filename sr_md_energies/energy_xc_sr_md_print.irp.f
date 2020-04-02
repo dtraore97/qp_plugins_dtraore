@@ -21,6 +21,7 @@ implicit none
  r_norm_prec = 1.d-12
  mu_tab = 1.d-12
  mu_array = (/ 0.d0, 0.125d0, 0.25d0, 0.375d0, 0.5d0, 0.625d0, 0.75d0, 0.875d0, 1.d0, 1.5d0, 2.d0, 2.5d0, 3.d0, 4.d0, 5.d0, 6.d0, 7.d0, 8.d0, 9.d0, 10.d0 /)
+print*, '#r_norm    rho      grad_rho_2        mu      dexdrho      decdrho       decdgrad_rho_2       dexdgrad_rho_2'
 
 do p = 1, 20  ! loop over mu_array  !do1 
 ! print*, mu_array(p)
@@ -73,8 +74,8 @@ do i=1, n_points_final_grid
  
  enddo
 enddo 
- print*,'# Ec_sr_pbe_md=', energy_c_sr_pbe_md(1)
- print*,'# Ex_sr_pbe_md=', energy_x_sr_pbe_md(1) 
+! print*,'# Ec_sr_pbe_md=', energy_c_sr_pbe_md(1)
+! print*,'# Ex_sr_pbe_md=', energy_x_sr_pbe_md(1) 
 enddo
 end program
 
