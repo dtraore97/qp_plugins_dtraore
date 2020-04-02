@@ -6,21 +6,24 @@
  ! ----------------------------------------------------------------------------------------------------------------------------------
  ! a, b and c            :                                                                              ; from (2), eq. ??
  ! B1, C1, D1, E1, F1    :                                                                              ; from (2)
- ! beta_rho              :                                                                              ; from (2), eq. ??
- ! delta_rho             :                                                                              ; from (2), eq. ??
- ! dbeta_drho            : d(beta)/dn                                                                   ;
- ! ddeltamu_drho         : d(delta*mu)/dn                                                               ;
- ! dgamma_drho           : dgamma/dn                                                                    ;
- ! dgammamu2_drho        : d(gamma*mu**2)/dn                                                            ;
- ! dg0_drho              : dg0/dn                                                                       ; ask Emmanuel
- ! dg0_drho              : dg0/dn                                                                       ; from (5), eq. 12
- ! dg0_drs               : dg0/drs                                                                      ; from (5), eq. 14
- ! decPBE_drho           : decPBE/dn                                                                    ;
- ! dexPBE_drho           : dexPBE/dn                                                                    ;
- ! ddexPBE_ddrho         : d2exPBE/dn2                                                                  ;
- ! ec                    : Usual density of correlation energy                                          ; from (1), already done in QP
- ! ex                    : Usual density of exchange energy                                             ; from (1), already done in QP
- ! gamma_rho             :                                                                              ; from (2), eq. ??
+ ! beta                  :                                                                              ; from (2), eq. ??
+ ! delta                 :                                                                              ; from (2), eq. ??
+ ! dbetadrho             : dbeta/dn                                                                     ;
+ ! ddeltadrho            : ddelta/dn                                                                    ;
+ ! dgammadrho            : dgamma/dn                                                                    ;
+ ! dg0drho               : dg0/dn                                                                       ; from (5), eq. 12
+ ! dg0drs                : dg0/drs                                                                      ; from (5), eq. 14
+ ! decdrho, decdgrad_rho : decsrmuPBE/dn and decsrmuPBE/dgradrho                                        ; from (3) and (4)
+ ! decPBEdrho            : decPBE/dn                                                                    ;
+ ! decPBEdgrad_rho_2     :                                                                              ; 
+ ! dexdrho, dexdgrad_rho : dexsrmuPBE/dn and dexsrmuPBE/dgradrho                                        ; from (3) and (4)
+ ! dexPBEdrho            : dexPBE/dn                                                                    ;
+ ! dexPBEdgrad_rho_2     : dexPBE/dgrad(n)^2                                                            ;
+ ! ecPBE                 : Usual density of correlation energy                                          ; from (1), already done in QP
+ ! ec_srmuPBE            :
+ ! exPBE                 : Usual density of exchange energy                                             ; from (1), already done in QP
+ ! ex_srmuPBE            :
+ ! gamma                 :                                                                              ; from (2), eq. ??
  ! g0                    : On-top pair-distribution function of the spin-unpolarized UEG                ;
  ! g0_UEG_mu_inf         :                                                                              ; rsdft_ecmd/ueg_on_top.irp.f
  ! grad_rho              : gradient of density                                                          ; 
@@ -28,10 +31,6 @@
  ! n2xc_UEG              : On-top exchange-correlation pair density of the uniform electron gas         ; from (2), below eq. 55
  ! rho                   : rho_a + rho_b (both densities of spins alpha and beta)                       ;
  ! rs                    : Seitz radius                                                                 ; rsdft_ecmd/ueg_on_top.irp.f
- ! vc_rho_sr_pbe_md      : derivative of ec_md^sr^mu^PBE with respect to rho                            ; from (3) and (4)
- ! vc_grad_rho_sr_pbe_md : derivative of ec_md^sr^mu^PBE with respect to grad_rho                       ; from (3) and (4)
- ! vx_rho_sr_pbe_md      : derivative of ex_md^sr^mu^PBE with respect to rho                            ; from (3) and (4)
- ! vx_grad_rho_sr_pbe_md : derivative of ex_md^sr^mu^PBE with respect to grad_rho                       ; from (3) and (4)
  !-----------------------------------------------------------------------------------------------------------------------------------
  ! SOURCES
  !-----------------------------------------------------------------------------------------------------------------------------------
@@ -41,6 +40,14 @@
  ! (4) : Developpement of eq. to be done
  ! (5) : Supplementary Materials for 'A density-based basis-set incomleteness correction for GW Methods' 
  !       - P.-F. Loos, B. Pradines, A. Scemama, E. Giner, J. Toulouse - ???????????
+ ! 
+ ! n = na + nb  | m = na - nb
+ ! na = (n+m)/2 | nb = (n-m)/2
+ ! gn2 = ga2 + gb2 + 2 gab | ga2 = (gn2 + gm2 + 2gnm)/4
+ ! gm2 = ga2 + gb2 - 2 gab | gb2 = (gn2 + gm2 - 2gnm)/4
+ ! gnm = ga2 - gb2         | gab = (gn2 - gm2)/4
+ ! dedn = dedna * dnadn + dednb * dnbdn = (1/2) * (dedna + dednb)
+ ! dedgn2 = dedga2 * dga2/dgn2 + dedgb2 * dgb2dgn2 + dedgab * dgabdgn2 = 
  !----------------------------------------------------------------------------------------------------------------------------------- 
 
 subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
@@ -106,21 +113,17 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   double precision              :: pi, a, b, thr
   double precision              :: rho, m  
   double precision              :: n2_UEG, dn2_UEGdrho, n2xc_UEG, dn2xc_UEGdrho, g0, dg0drho
-! 
-! n = na + nb  | m = na - nb
-! na = (n+m)/2 | nb = (n-m)/2
-! gn2 = ga2 + gb2 + 2 gab | ga2 = (gn2 + gm2 + 2gnm)/4
-! gm2 = ga2 + gb2 - 2 gab | gb2 = (gn2 + gm2 - 2gnm)/4
-! gnm = ga2 - gb2         | gab = (gn2 - gm2)/4
 
-! dedn = dedna * dnadn + dednb * dnbdn = (1/2) * (dedna + dednb)
-! dedgn2 = dedga2 * dga2/dgn2 + dedgb2 * dgb2dgn2 + dedgab * dgabdgn2 = 
+  if(abs(rho_a-rho_b) > 1.d-12)then
+  stop "routine implemented only for closed-shell systems"
+  endif 
 
   pi = dacos(-1.d0)
   rho = rho_a + rho_b
   m = rho_a - rho_b
   thr = 1.d-12
-! exchange PBE standard
+
+! exchange PBE standard and on-top pair distribution
   call ex_pbe_sr(1.d-12,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,exPBE,dexPBEdrho_a,dexPBEdrho_b,dexPBEdgrad_rho_a_2,dexPBEdgrad_rho_b_2,dexPBEdgrad_rho_a_b)
   call g0_dg0(rho, rho_a, rho_b, g0, dg0drho)
   
@@ -165,6 +168,7 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   ex_srmuPBE=exPBE/denom
 
 ! calculation of derivatives
+  !dex/dn
   dexPBEdrho = 0.5d0 *(dexPBEdrho_a + dexPBEdrho_b)
   dn2_UEGdrho = 2.d0*rho*g0 + (rho**2)*dg0drho
   dn2xc_UEGdrho = dn2_UEGdrho - 2.d0*rho
@@ -177,7 +181,7 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   dexdrho_a = dexdrho
   dexdrho_b = dexdrho
  
-  !--------------
+  !dex/d((gradn)^2)
   dexPBEdgrad_rho_2 = 0.25d0 *(dexPBEdgrad_rho_a_2 + dexPBEdgrad_rho_b_2 + dexPBEdgrad_rho_a_b)
   
   dgammadgrad_rho_2 = dexPBEdgrad_rho_2/(a*n2xc_UEG)
@@ -185,8 +189,13 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
 
   ddenomdgrad_rho_2 = ddeltadgrad_rho_2*mu + dgammadgrad_rho_2*mu**2
   dexdgrad_rho_2 = dexPBEdgrad_rho_2/denom - exPBE*ddenomdgrad_rho_2/(denom**2)
+  dexdgrad_rho_a_2 = 999
+  dexdgrad_rho_b_2 = 999
+  dexdgrad_rho_a_b = 999 !! je refléchis encore sur ces trois là
+ 
   end subroutine exmdsrPBE
 !---------------------------------------------------------------------------------------------------------------------------------------------
+
   subroutine ecmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,ec_srmuPBE,decdrho_a,decdrho_b, decdrho, decdgrad_rho_a_2,decdgrad_rho_b_2,decdgrad_rho_a_b, decdgrad_rho_2)
 
   implicit none
@@ -204,23 +213,29 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   double precision              :: rho, m  
   double precision              :: n2_UEG, dn2_UEGdrho, n2xc_UEG, dn2xc_UEGdrho, g0, dg0drho
  
+  if(abs(rho_a-rho_b) > 1.d-12)then
+  stop "routine implemented only for closed-shell systems"
+  endif 
+
   pi = dacos(-1.d0)
   rho = rho_a + rho_b
   m = rho_a - rho_b
   thr = 1.d-12
   
+! correlation PBE standard and on-top pair distribution 
   call rho_ab_to_rho_oc(rho_a,rho_b,rho_o,rho_c)
   call grad_rho_ab_to_grad_rho_oc(grad_rho_a_2,grad_rho_b_2,grad_rho_a_b,grad_rho_o_2,grad_rho_c_2,grad_rho_o_c)
 
-! correlation PBE standard
-  
   call ec_pbe_sr(1.d-12,rho_c,rho_o,grad_rho_c_2,grad_rho_o_2,grad_rho_o_c,ecPBE,decPBEdrho_c,decPBEdrho_o,decPBEdgrad_rho_c_2,decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_o)
+
   call v_rho_oc_to_v_rho_ab(decPBEdrho_o, decPBEdrho_c, decPBEdrho_a, decPBEdrho_b)
   call v_grad_rho_oc_to_v_grad_rho_ab(decPBEdgrad_rho_o_2, decPBEdgrad_rho_c_2, decPBEdgrad_rho_c_o, decPBEdgrad_rho_a_2, decPBEdgrad_rho_b_2, decPBEdgrad_rho_a_b)
+
   call g0_dg0(rho, rho_a, rho_b, g0, dg0drho)
 
 ! calculation of energy
   c = 2*dsqrt(pi)*(1.d0 - dsqrt(2.d0))/3.d0
+  
   n2_UEG = (rho**2)*g0
   if(dabs(n2_UEG).lt.thr)then
    n2_UEG = 1.d-12
@@ -235,7 +250,7 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   ec_srmuPBE=ecPBE/denom
 
 ! calculation of derivatives 
-  !--------------------
+  !dec/dn
   decPBEdrho = 0.5d0 *(decPBEdrho_a + decPBEdrho_b)
 
   dn2_UEGdrho = 2.d0*rho*g0 + (rho**2)*dg0drho
@@ -247,14 +262,16 @@ subroutine excmdsrPBE(mu,rho_a,rho_b,grad_rho_a_2,grad_rho_b_2,grad_rho_a_b, &
   decdrho_a = decdrho
   decdrho_b = decdrho
 
-  !---------------------  
+  !dec/((dgradn)^2)
   decPBEdgrad_rho_2 = 0.25d0 *(decPBEdgrad_rho_a_2 + decPBEdgrad_rho_b_2 + decPBEdgrad_rho_a_b)
   
   dbetadgrad_rho_2 = decPBEdgrad_rho_2/(c*n2_UEG)
   ddenomdgrad_rho_2 = dbetadgrad_rho_2*mu**3
   
   decdgrad_rho_2 = decPBEdgrad_rho_2/denom - ecPBE*ddenomdgrad_rho_2/(denom**2)
-   
+  decdgrad_rho_a_2 = 999
+  decdgrad_rho_b_2 = 999
+  decdgrad_rho_a_b = 999 ! Je réfléchis encore sur ces trois là 
   end subroutine ecmdsrPBE
 
 
